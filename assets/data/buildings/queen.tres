@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="QueenData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/queen_data.gd" id="1_s"]
+[ext_resource type="Texture2D" path="res://assets/icons/ui_crown.svg" id="2_i"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"queen"
+display_name = "Королева"
+description = "Матка улья. Если погибнет — колония проиграет."
+category = 5
+icon = ExtResource("2_i")
+footprint_radius = 1
+build_time = 0.0
+max_hp = 600.0
+color = Color(0.6, 0.4, 0.8, 1)

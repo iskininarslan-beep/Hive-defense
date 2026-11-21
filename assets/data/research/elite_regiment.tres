@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ResearchData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/research_data.gd" id="1_s"]
+[ext_resource type="Texture2D" path="res://assets/icons/ability_swarm_fury.svg" id="2_i"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"elite_regiment"
+display_name = "Элитный полк"
+description = "Скорострельность башен +30% и открывает способность «Ярость роя»."
+branch = 0
+tier = 2
+prerequisites = PackedStringArray("honey_mortar", "tesla_spire")
+any_prerequisite = true
+icon = ExtResource("2_i")
+cost_wax = 130.0
+cost_honey = 90.0
+time = 35.0
+modifier_keys = PackedStringArray("tower_fire_rate")
+modifier_values = PackedFloat32Array(0.3)
+ending = 0

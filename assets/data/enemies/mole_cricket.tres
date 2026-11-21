@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1_s"]
+[ext_resource type="Script" path="res://scripts/enemies/visuals/mole_cricket_visual.gd" id="2_v"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"mole_cricket"
+display_name = "Медведка"
+layer = 0
+max_hp = 120.0
+speed = 40.0
+damage = 10.0
+attack_interval = 1.0
+target_mode = 2
+radius = 12.0
+visual_script = ExtResource("2_v")
+visual_scale = 1.0
+emerge_time = 2.0
+steal_amount = 15.0

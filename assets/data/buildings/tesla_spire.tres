@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="TowerData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/tower_data.gd" id="1_s"]
+[ext_resource type="Texture2D" path="res://assets/icons/bld_tesla_spire.svg" id="2_i"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"tesla_spire"
+display_name = "Электрожало"
+description = "Цепная молния бьёт до 3 наземных и воздушных врагов."
+category = 3
+icon = ExtResource("2_i")
+footprint_radius = 0
+cost_wax = 55.0
+cost_honey = 25.0
+build_time = 10.0
+max_hp = 140.0
+color = Color(0.85, 0.32, 0.27, 1)
+worker_role = 3
+worker_slots = 2
+required_research = &"tesla_spire"
+target_layer = 2
+attack_range = 215.0
+damage = 14.0
+fire_interval = 1.0
+projectile_speed = 900.0
+splash_radius = 0.0
+slow_factor = 1.0
+slow_duration = 0.0
+chain_count = 3
+chain_range = 105.0
+projectile_color = Color(0.45, 0.85, 1, 1)

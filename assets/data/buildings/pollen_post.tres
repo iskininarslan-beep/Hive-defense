@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="GatherData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/gather_data.gd" id="1_s"]
+[ext_resource type="Texture2D" path="res://assets/icons/bld_pollen_post.svg" id="2_i"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"pollen_post"
+display_name = "Сбор пыльцы"
+description = "Пчёлы собирают пыльцу с ближайших жёлтых цветов."
+category = 0
+icon = ExtResource("2_i")
+footprint_radius = 0
+cost_wax = 20.0
+build_time = 8.0
+max_hp = 80.0
+color = Color(0.93, 0.72, 0.25, 1)
+worker_role = 1
+worker_slots = 2
+resource_type = 0
+amount_per_trip = 6.0
+collect_time = 1.5

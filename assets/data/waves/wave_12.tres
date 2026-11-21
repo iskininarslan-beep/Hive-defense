@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="WaveData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wave_data.gd" id="1_s"]
+
+[resource]
+script = ExtResource("1_s")
+enemy_ids = PackedStringArray("ladybug", "spider")
+enemy_counts = PackedInt32Array(6, 8)
+pattern = 1
+spawn_interval = 0.6

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ResearchData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/research_data.gd" id="1_s"]
+[ext_resource type="Texture2D" path="res://assets/icons/bld_apartments.svg" id="2_i"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"mega_apartments"
+display_name = "Комфорт сот"
+description = "+4 к вместимости каждых Апартаментов и +50% к скорости выращивания/обучения пчёл."
+branch = 1
+tier = 2
+prerequisites = PackedStringArray("aluminium_bucket", "swift_wings")
+any_prerequisite = true
+icon = ExtResource("2_i")
+cost_wax = 85.0
+cost_honey = 55.0
+time = 30.0
+modifier_keys = PackedStringArray("apartments_cap_bonus", "training_speed")
+modifier_values = PackedFloat32Array(4.0, 0.5)
+ending = 0

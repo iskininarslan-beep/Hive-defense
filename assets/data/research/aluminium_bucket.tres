@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ResearchData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/research_data.gd" id="1_s"]
+[ext_resource type="Texture2D" path="res://assets/icons/role_gatherer.svg" id="2_i"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"aluminium_bucket"
+display_name = "Вёдра +50%"
+description = "Добыча пыльцы и нектара за рейс увеличивается на 50%."
+branch = 1
+tier = 1
+prerequisites = PackedStringArray("honey_factory")
+any_prerequisite = false
+icon = ExtResource("2_i")
+cost_wax = 45.0
+cost_honey = 25.0
+time = 22.0
+modifier_keys = PackedStringArray("gather_amount")
+modifier_values = PackedFloat32Array(0.5)
+ending = 0

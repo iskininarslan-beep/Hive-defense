@@ -1,0 +1,435 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
+[ext_resource type="Script" path="res://scripts/ui/building_panel.gd" id="2_bp"]
+[ext_resource type="Texture2D" path="res://assets/icons/res_pollen.svg" id="3_pol"]
+[ext_resource type="Texture2D" path="res://assets/icons/res_nectar.svg" id="4_nec"]
+[ext_resource type="Texture2D" path="res://assets/icons/res_wax.svg" id="5_wax"]
+[ext_resource type="Texture2D" path="res://assets/icons/res_honey.svg" id="6_hon"]
+[ext_resource type="Texture2D" path="res://assets/icons/ui_crown.svg" id="7_crn"]
+
+[node name="HUD" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_hud")
+
+[node name="TopBar" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = -12.0
+offset_bottom = 84.0
+grow_horizontal = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="ResourceBar" type="PanelContainer" parent="TopBar"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="HBox" type="HBoxContainer" parent="TopBar/ResourceBar"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PollenChip" type="HBoxContainer" parent="TopBar/ResourceBar/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Icon" type="TextureRect" parent="TopBar/ResourceBar/HBox/PollenChip"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = ExtResource("3_pol")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PollenLabel" type="Label" parent="TopBar/ResourceBar/HBox/PollenChip"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "50"
+
+[node name="NectarChip" type="HBoxContainer" parent="TopBar/ResourceBar/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Icon" type="TextureRect" parent="TopBar/ResourceBar/HBox/NectarChip"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = ExtResource("4_nec")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NectarLabel" type="Label" parent="TopBar/ResourceBar/HBox/NectarChip"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "50"
+
+[node name="WaxChip" type="HBoxContainer" parent="TopBar/ResourceBar/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Icon" type="TextureRect" parent="TopBar/ResourceBar/HBox/WaxChip"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = ExtResource("5_wax")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="WaxLabel" type="Label" parent="TopBar/ResourceBar/HBox/WaxChip"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "120"
+
+[node name="HoneyChip" type="HBoxContainer" parent="TopBar/ResourceBar/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Icon" type="TextureRect" parent="TopBar/ResourceBar/HBox/HoneyChip"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = ExtResource("6_hon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="HoneyLabel" type="Label" parent="TopBar/ResourceBar/HBox/HoneyChip"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "50"
+
+[node name="Sep1" type="VSeparator" parent="TopBar/ResourceBar/HBox"]
+layout_mode = 2
+
+[node name="BeesBtn" type="Button" parent="TopBar/ResourceBar/HBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(104, 38)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "12/14"
+expand_icon = true
+
+[node name="Sep2" type="VSeparator" parent="TopBar/ResourceBar/HBox"]
+layout_mode = 2
+
+[node name="QueenChip" type="HBoxContainer" parent="TopBar/ResourceBar/HBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Icon" type="TextureRect" parent="TopBar/ResourceBar/HBox/QueenChip"]
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+texture = ExtResource("7_crn")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="QueenHPBar" type="ProgressBar" parent="TopBar/ResourceBar/HBox/QueenChip"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(80, 14)
+layout_mode = 2
+size_flags_vertical = 4
+value = 100.0
+show_percentage = false
+
+[node name="SpacerLeft" type="Control" parent="TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="WavePanel" type="PanelContainer" parent="TopBar"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="VBox" type="VBoxContainer" parent="TopBar/WavePanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="WaveTopRow" type="HBoxContainer" parent="TopBar/WavePanel/VBox"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 8
+
+[node name="WaveLabel" type="Label" parent="TopBar/WavePanel/VBox/WaveTopRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Волна 0/15"
+horizontal_alignment = 1
+
+[node name="CallWaveBtn" type="Button" parent="TopBar/WavePanel/VBox/WaveTopRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+tooltip_text = "Вызвать волну раньше (+15 воска, +10 мёда)"
+expand_icon = true
+
+[node name="WaveProgress" type="ProgressBar" parent="TopBar/WavePanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 10)
+layout_mode = 2
+show_percentage = false
+
+[node name="SpacerRight" type="Control" parent="TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="TopRight" type="HBoxContainer" parent="TopBar"]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/separation = 8
+
+[node name="PauseBtn" type="Button" parent="TopBar/TopRight"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(52, 52)
+layout_mode = 2
+tooltip_text = "Пауза (Пробел)"
+expand_icon = true
+
+[node name="SpeedBtn" type="Button" parent="TopBar/TopRight"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(88, 52)
+layout_mode = 2
+tooltip_text = "Скорость игры"
+text = "x1"
+expand_icon = true
+
+[node name="ToastLabel" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -360.0
+offset_top = 96.0
+offset_right = 360.0
+offset_bottom = 136.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.38, 1)
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="LeftStack" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 86.0
+offset_right = 330.0
+offset_bottom = 610.0
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="BalanceBadge" type="Button" parent="LeftStack"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(220, 38)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_font_sizes/font_size = 18
+text = "Перевес воинов"
+expand_icon = true
+
+[node name="RetrainPanel" type="PanelContainer" parent="LeftStack"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(270, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="VBox" type="VBoxContainer" parent="LeftStack/RetrainPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="LeftStack/RetrainPanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RetrainIcon" type="TextureRect" parent="LeftStack/RetrainPanel/VBox/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Title" type="Label" parent="LeftStack/RetrainPanel/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.88, 0.35, 1)
+theme_override_font_sizes/font_size = 19
+text = "Переквалификация"
+
+[node name="RetrainCloseBtn" type="Button" parent="LeftStack/RetrainPanel/VBox/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(32, 32)
+layout_mode = 2
+text = "✕"
+
+[node name="RetrainRowsBox" type="VBoxContainer" parent="LeftStack/RetrainPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="AbilityBar" type="VBoxContainer" parent="LeftStack"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="BuildBar" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -500.0
+offset_top = -84.0
+offset_right = 500.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="BuildBarBox" type="HBoxContainer" parent="BuildBar"]
+unique_name_in_owner = true
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 5
+
+[node name="BuildingPanel" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -316.0
+offset_top = -420.0
+offset_right = -12.0
+offset_bottom = -100.0
+grow_horizontal = 0
+grow_vertical = 0
+script = ExtResource("2_bp")
+
+[node name="VBox" type="VBoxContainer" parent="BuildingPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Header" type="HBoxContainer" parent="BuildingPanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BPIcon" type="TextureRect" parent="BuildingPanel/VBox/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BPName" type="Label" parent="BuildingPanel/VBox/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.88, 0.35, 1)
+theme_override_font_sizes/font_size = 21
+text = "Здание"
+
+[node name="BPDemolishBtn" type="Button" parent="BuildingPanel/VBox/Header"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+tooltip_text = "Снести (возврат 50%)"
+expand_icon = true
+
+[node name="BPHpBar" type="ProgressBar" parent="BuildingPanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+value = 100.0
+show_percentage = false
+
+[node name="BPStatus" type="Label" parent="BuildingPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Работает"
+
+[node name="BPWorkersRow" type="HBoxContainer" parent="BuildingPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BPWorkerIcon" type="TextureRect" parent="BuildingPanel/VBox/BPWorkersRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="BPWorkersLabel" type="Label" parent="BuildingPanel/VBox/BPWorkersRow"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "1/2"
+
+[node name="BPKindergartenBox" type="HBoxContainer" parent="BuildingPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BPGathererBtn" type="Button" parent="BuildingPanel/VBox/BPKindergartenBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+tooltip_text = "Растить собирателя"
+expand_icon = true
+
+[node name="BPBuilderBtn" type="Button" parent="BuildingPanel/VBox/BPKindergartenBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+tooltip_text = "Растить строителя"
+expand_icon = true
+
+[node name="BPSoldierBtn" type="Button" parent="BuildingPanel/VBox/BPKindergartenBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+tooltip_text = "Растить воина"
+expand_icon = true
+
+[node name="BPUpgradeBtn" type="Button" parent="BuildingPanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+text = "Улучшить"
+expand_icon = true
+
+[node name="BPRetrainBtn" type="Button" parent="BuildingPanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+text = "Переобучить"
+expand_icon = true
+
+[node name="BPLabBtn" type="Button" parent="BuildingPanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+text = "Исследования"
+expand_icon = true

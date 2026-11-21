@@ -1,3 +1,8 @@
+cd "C:\Users\early\Desktop\Всякое\Hive Defense"
+git clone https://github.com/iskininarslan-beep/Hive-defense.git .
+
+https://youtu.be/Fyu4J5A39Fc?si=VyKSlZ0qZ1ZCMAJm
+
 # Правила проекта Hive Defense (Godot 4.7.2-stable)
 
 ## Роль

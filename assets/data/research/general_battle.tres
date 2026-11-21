@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ResearchData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/research_data.gd" id="1_s"]
+[ext_resource type="Texture2D" path="res://assets/icons/role_soldier.svg" id="2_i"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"general_battle"
+display_name = "Генеральное сражение"
+description = "Вызывает Королеву шершней. Победа над ней даст военную концовку."
+branch = 0
+tier = 3
+prerequisites = PackedStringArray("elite_regiment", "reinforced_wax")
+any_prerequisite = true
+icon = ExtResource("2_i")
+cost_pollen = 110.0
+cost_wax = 210.0
+cost_honey = 160.0
+time = 45.0
+ending = 1

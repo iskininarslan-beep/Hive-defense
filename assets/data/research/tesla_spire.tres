@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ResearchData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/research_data.gd" id="1_s"]
+[ext_resource type="Texture2D" path="res://assets/icons/bld_tesla_spire.svg" id="2_i"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"tesla_spire"
+display_name = "Электрожало"
+description = "Открывает башню цепной молнии против наземных и воздушных врагов."
+branch = 0
+tier = 1
+prerequisites = PackedStringArray("spear")
+any_prerequisite = false
+icon = ExtResource("2_i")
+cost_pollen = 50.0
+cost_wax = 75.0
+time = 25.0
+ending = 0

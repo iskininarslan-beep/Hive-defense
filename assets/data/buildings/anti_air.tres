@@ -1,0 +1,29 @@
+[gd_resource type="Resource" script_class="TowerData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/tower_data.gd" id="1_s"]
+[ext_resource type="Texture2D" path="res://assets/icons/bld_anti_air.svg" id="2_i"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"anti_air"
+display_name = "Жалометатель"
+description = "Скорострельная зенитная турель против летающих врагов."
+category = 3
+icon = ExtResource("2_i")
+footprint_radius = 0
+cost_pollen = 10.0
+cost_wax = 35.0
+build_time = 8.0
+max_hp = 120.0
+color = Color(0.85, 0.32, 0.27, 1)
+worker_role = 3
+worker_slots = 1
+target_layer = 1
+attack_range = 230.0
+damage = 9.0
+fire_interval = 0.35
+projectile_speed = 700.0
+splash_radius = 0.0
+slow_factor = 1.0
+slow_duration = 0.0
+projectile_color = Color(0.5, 1, 0.85, 1)

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="LabData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/lab_data.gd" id="1_s"]
+[ext_resource type="Texture2D" path="res://assets/icons/bld_lab.svg" id="2_i"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"lab"
+display_name = "Лаборатория"
+description = "Открывает дерево технологий при нажатии на здание."
+category = 2
+icon = ExtResource("2_i")
+footprint_radius = 1
+cost_pollen = 30.0
+cost_wax = 50.0
+build_time = 15.0
+max_hp = 200.0
+color = Color(0.32, 0.6, 0.95, 1)
+max_count = 1

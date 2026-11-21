@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ResearchData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/research_data.gd" id="1_s"]
+[ext_resource type="Texture2D" path="res://assets/icons/bld_honey_factory.svg" id="2_i"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"honey_factory"
+display_name = "Фабрика мёда"
+description = "Открывает постройку фабрики мёда из нектара."
+branch = 1
+tier = 0
+prerequisites = PackedStringArray()
+any_prerequisite = false
+icon = ExtResource("2_i")
+cost_nectar = 20.0
+cost_wax = 20.0
+time = 14.0
+ending = 0

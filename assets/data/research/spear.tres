@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ResearchData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/research_data.gd" id="1_s"]
+[ext_resource type="Texture2D" path="res://assets/icons/bld_ballista.svg" id="2_i"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"spear"
+display_name = "Копьё"
+description = "Укреплённые жала увеличивают урон всех башен на 30%."
+branch = 0
+tier = 0
+prerequisites = PackedStringArray()
+any_prerequisite = false
+icon = ExtResource("2_i")
+cost_pollen = 30.0
+cost_wax = 30.0
+time = 18.0
+modifier_keys = PackedStringArray("tower_damage")
+modifier_values = PackedFloat32Array(0.3)
+ending = 0

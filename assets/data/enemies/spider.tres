@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1_s"]
+[ext_resource type="Script" path="res://scripts/enemies/visuals/spider_visual.gd" id="2_v"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"spider"
+display_name = "Паук"
+layer = 0
+max_hp = 180.0
+speed = 32.0
+damage = 14.0
+attack_interval = 1.2
+target_mode = 1
+radius = 14.0
+visual_script = ExtResource("2_v")
+visual_scale = 1.0

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="WonderData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/wonder_data.gd" id="1_s"]
+[ext_resource type="Texture2D" path="res://assets/icons/bld_golden_hive.svg" id="2_i"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"golden_hive"
+display_name = "Золотой улей"
+description = "Чудо колонии. Завершение постройки приносит экономическую победу."
+category = 4
+icon = ExtResource("2_i")
+footprint_radius = 1
+cost_wax = 220.0
+cost_honey = 220.0
+build_time = 50.0
+max_hp = 500.0
+color = Color(1, 0.9, 0.4, 1)
+required_research = &"golden_hive"
+max_count = 1

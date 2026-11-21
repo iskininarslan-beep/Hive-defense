@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ResearchData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/research_data.gd" id="1_s"]
+[ext_resource type="Texture2D" path="res://assets/icons/ability_field_talks.svg" id="2_i"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"field_talks"
+display_name = "Переговоры"
+description = "Открывает способность убедить половину врагов уйти с поля боя."
+branch = 2
+tier = 2
+prerequisites = PackedStringArray("agitation", "sabotage")
+any_prerequisite = true
+icon = ExtResource("2_i")
+cost_nectar = 90.0
+cost_honey = 110.0
+time = 35.0
+ending = 0

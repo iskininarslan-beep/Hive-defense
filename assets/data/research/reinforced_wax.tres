@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ResearchData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/research_data.gd" id="1_s"]
+[ext_resource type="Texture2D" path="res://assets/icons/res_shield.svg" id="2_i"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"reinforced_wax"
+display_name = "Укреп. воск"
+description = "Прочность всех зданий +50% и восстановление Королевы (+3 HP/с)."
+branch = 0
+tier = 2
+prerequisites = PackedStringArray("honey_mortar", "tesla_spire")
+any_prerequisite = true
+icon = ExtResource("2_i")
+cost_pollen = 90.0
+cost_wax = 130.0
+time = 35.0
+modifier_keys = PackedStringArray("building_hp", "queen_regen")
+modifier_values = PackedFloat32Array(0.5, 3.0)
+ending = 0

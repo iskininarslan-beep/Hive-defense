@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ResearchData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/research_data.gd" id="1_s"]
+[ext_resource type="Texture2D" path="res://assets/icons/ability_agitation.svg" id="2_i"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"agitation"
+display_name = "Агитация"
+description = "Открывает способность переманивать до 5 вражеских шершней на нашу сторону."
+branch = 2
+tier = 1
+prerequisites = PackedStringArray("translator")
+any_prerequisite = false
+icon = ExtResource("2_i")
+cost_nectar = 55.0
+cost_honey = 55.0
+time = 25.0
+ending = 0

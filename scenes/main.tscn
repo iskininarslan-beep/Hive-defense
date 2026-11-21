@@ -1,6 +1,111 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://cpaa6rf10xbdr"]
 
-[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="Script" uid="uid://brvm8do763ikl" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="Script" uid="uid://bllyp3jt48p6n" path="res://scripts/world/camera_controller.gd" id="2_cam"]
+[ext_resource type="Script" uid="uid://q1i76vastvab" path="res://scripts/systems/resource_bank.gd" id="3_bank"]
+[ext_resource type="Script" uid="uid://dirosax3pv0ho" path="res://scripts/systems/colony.gd" id="4_col"]
+[ext_resource type="PackedScene" path="res://scenes/bees/bee.tscn" id="5_bee"]
+[ext_resource type="Script" uid="uid://bni1nuhhbwsvn" path="res://scripts/systems/research_manager.gd" id="6_res"]
+[ext_resource type="Script" uid="uid://ch7qo3oa4yqk" path="res://scripts/systems/wave_manager.gd" id="7_wave"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/enemy.tscn" id="8_enemy"]
+[ext_resource type="Script" uid="uid://cpmkpsaxjqogq" path="res://scripts/systems/ability_manager.gd" id="9_abm"]
+[ext_resource type="Script" uid="uid://bgqn3beod5lln" path="res://scripts/abilities/agitation_ability.gd" id="10_agit"]
+[ext_resource type="Script" uid="uid://dabrdagrlaa8r" path="res://scripts/abilities/field_talks_ability.gd" id="11_talks"]
+[ext_resource type="Script" uid="uid://0j81msrgea1c" path="res://scripts/abilities/swarm_fury_ability.gd" id="12_fury"]
+[ext_resource type="Script" uid="uid://cyjryl0lqwu21" path="res://scripts/systems/ending_controller.gd" id="13_end"]
+[ext_resource type="Script" uid="uid://dd1aw5cy1hc34" path="res://scripts/world/flower_field.gd" id="14_flw"]
+[ext_resource type="Script" uid="uid://dhafoql6eh26" path="res://scripts/world/arena.gd" id="15_ar"]
+[ext_resource type="PackedScene" path="res://scenes/buildings/building.tscn" id="16_bld"]
+[ext_resource type="Script" uid="uid://bk7o78hg7dd5v" path="res://scripts/world/build_controller.gd" id="17_bc"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="18_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/research_panel.tscn" id="19_rp"]
+[ext_resource type="PackedScene" path="res://scenes/ui/game_over_screen.tscn" id="20_go"]
+[ext_resource type="PackedScene" path="res://scenes/ui/intro_screen.tscn" id="21_in"]
+[ext_resource type="Script" uid="uid://dwqjjooqtk17s" path="res://scripts/debug/debug_tools.gd" id="22_dbg"]
+[ext_resource type="Script" uid="uid://bhe6vxvmfoabm" path="res://scripts/world/effects_layer.gd" id="23_fx"]
 
-[node name="Main" type="Node2D"]
+[node name="Main" type="Node2D" unique_id=1685534957]
 script = ExtResource("1_main")
+
+[node name="Camera" type="Camera2D" parent="." unique_id=366960737]
+process_mode = 3
+position = Vector2(640, 335)
+script = ExtResource("2_cam")
+
+[node name="Systems" type="Node" parent="." unique_id=845313734]
+
+[node name="ResourceBank" type="Node" parent="Systems" unique_id=58511245]
+script = ExtResource("3_bank")
+
+[node name="Colony" type="Node" parent="Systems" unique_id=1600239575]
+script = ExtResource("4_col")
+bee_scene = ExtResource("5_bee")
+
+[node name="ResearchManager" type="Node" parent="Systems" unique_id=184357755]
+script = ExtResource("6_res")
+
+[node name="WaveManager" type="Node" parent="Systems" unique_id=1119693716]
+script = ExtResource("7_wave")
+enemy_scene = ExtResource("8_enemy")
+
+[node name="AbilityManager" type="Node" parent="Systems" unique_id=114614699]
+script = ExtResource("9_abm")
+
+[node name="AgitationAbility" type="Node" parent="Systems/AbilityManager" unique_id=1503757144]
+script = ExtResource("10_agit")
+
+[node name="FieldTalksAbility" type="Node" parent="Systems/AbilityManager" unique_id=1475044027]
+script = ExtResource("11_talks")
+
+[node name="SwarmFuryAbility" type="Node" parent="Systems/AbilityManager" unique_id=399116801]
+script = ExtResource("12_fury")
+
+[node name="EndingController" type="Node" parent="Systems" unique_id=856540174]
+script = ExtResource("13_end")
+
+[node name="World" type="Node2D" parent="." unique_id=2027898071]
+
+[node name="FlowerField" type="Node2D" parent="World" unique_id=66887694]
+position = Vector2(640, 335)
+script = ExtResource("14_flw")
+
+[node name="Arena" type="Node2D" parent="World" unique_id=1076128142]
+position = Vector2(640, 335)
+script = ExtResource("15_ar")
+building_scene = ExtResource("16_bld")
+
+[node name="Buildings" type="Node2D" parent="World" unique_id=12743742]
+
+[node name="Bees" type="Node2D" parent="World" unique_id=550933272]
+z_index = 2
+
+[node name="Enemies" type="Node2D" parent="World" unique_id=646855461]
+z_index = 3
+
+[node name="Projectiles" type="Node2D" parent="World" unique_id=1207799248]
+z_index = 4
+
+[node name="BuildController" type="Node2D" parent="World" unique_id=1344169968]
+z_index = 5
+script = ExtResource("17_bc")
+
+[node name="EffectsLayer" type="Node2D" parent="World" unique_id=316589978]
+z_index = 6
+script = ExtResource("23_fx")
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=1723486131]
+process_mode = 3
+
+[node name="HUD" parent="UI" unique_id=1836600009 instance=ExtResource("18_hud")]
+
+[node name="ResearchPanel" parent="UI" unique_id=1154038426 instance=ExtResource("19_rp")]
+visible = false
+
+[node name="GameOverScreen" parent="UI" unique_id=659859826 instance=ExtResource("20_go")]
+visible = false
+
+[node name="IntroScreen" parent="UI" unique_id=1179256756 instance=ExtResource("21_in")]
+
+[node name="DebugTools" type="Node" parent="." unique_id=1804805929]
+process_mode = 3
+script = ExtResource("22_dbg")

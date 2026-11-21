@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ResearchData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/research_data.gd" id="1_s"]
+[ext_resource type="Texture2D" path="res://assets/icons/res_sabotage.svg" id="2_i"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"sabotage"
+display_name = "Диверсия"
+description = "Снижает военный потенциал и здоровье вражеских волн на 18%."
+branch = 2
+tier = 1
+prerequisites = PackedStringArray("translator")
+any_prerequisite = false
+icon = ExtResource("2_i")
+cost_pollen = 55.0
+cost_honey = 55.0
+time = 25.0
+modifier_keys = PackedStringArray("enemy_power")
+modifier_values = PackedFloat32Array(-0.18)
+ending = 0

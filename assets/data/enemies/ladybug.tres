@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="EnemyData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/enemy_data.gd" id="1_s"]
+[ext_resource type="Script" path="res://scripts/enemies/visuals/ladybug_visual.gd" id="2_v"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"ladybug"
+display_name = "Божья коровка"
+layer = 1
+max_hp = 260.0
+speed = 28.0
+damage = 20.0
+attack_interval = 1.5
+target_mode = 1
+radius = 14.0
+visual_script = ExtResource("2_v")
+visual_scale = 1.0
