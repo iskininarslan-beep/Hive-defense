@@ -4,6 +4,8 @@
 
 # Godot-specific ignores
 export_presets.cfg
+build/
+*.avi
 
 # Mono-specific ignores
 .mono/

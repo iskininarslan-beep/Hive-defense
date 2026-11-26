@@ -6,6 +6,7 @@ signal role_requested(b: Building, role: GameEnums.BeeRole)
 signal research_requested
 signal upgrade_requested(b: Building)
 signal retrain_panel_requested
+signal workers_adjust_requested(b: Building, delta: int)
 
 @onready var icon_rect: TextureRect = %BPIcon
 @onready var name_label: Label = %BPName
@@ -13,7 +14,9 @@ signal retrain_panel_requested
 @onready var status_label: Label = %BPStatus
 @onready var workers_row: HBoxContainer = %BPWorkersRow
 @onready var worker_icon: TextureRect = %BPWorkerIcon
+@onready var workers_dec_btn: Button = %BPWorkersDecBtn
 @onready var workers_label: Label = %BPWorkersLabel
+@onready var workers_inc_btn: Button = %BPWorkersIncBtn
 @onready var kindergarten_box: HBoxContainer = %BPKindergartenBox
 @onready var gatherer_btn: Button = %BPGathererBtn
 @onready var builder_btn: Button = %BPBuilderBtn
@@ -24,7 +27,12 @@ signal retrain_panel_requested
 @onready var demolish_btn: Button = %BPDemolishBtn
 
 var _building: Building = null
+var _balance: GameBalanceConfig = null
 var _tween: Tween = null
+
+
+func set_balance_config(cfg: GameBalanceConfig) -> void:
+	_balance = cfg
 
 
 func _ready() -> void:
@@ -37,9 +45,17 @@ func _ready() -> void:
 	lab_btn.icon = GameIcons.BLD_LAB
 	demolish_btn.icon = GameIcons.UI_DEMOLISH
 
-	for btn: Button in [gatherer_btn, builder_btn, soldier_btn, upgrade_btn, retrain_btn, lab_btn, demolish_btn]:
+	for btn: Button in [workers_dec_btn, workers_inc_btn, gatherer_btn, builder_btn, soldier_btn, upgrade_btn, retrain_btn, lab_btn, demolish_btn]:
 		btn.focus_mode = Control.FOCUS_NONE
 
+	workers_dec_btn.pressed.connect(func() -> void:
+		if is_instance_valid(_building):
+			workers_adjust_requested.emit(_building, -1)
+	)
+	workers_inc_btn.pressed.connect(func() -> void:
+		if is_instance_valid(_building):
+			workers_adjust_requested.emit(_building, 1)
+	)
 	gatherer_btn.pressed.connect(func() -> void:
 		if is_instance_valid(_building):
 			role_requested.emit(_building, GameEnums.BeeRole.GATHERER)
@@ -88,7 +104,16 @@ func refresh() -> void:
 	if _building.data.worker_slots > 0:
 		workers_row.visible = true
 		worker_icon.texture = GameIcons.role_icon(_building.data.worker_role)
-		workers_label.text = "%d/%d" % [_building.get_present_operators(), _building.data.worker_slots]
+		var present: int = _building.get_present_operators()
+		var max_slots: int = _building.data.worker_slots
+		if _building.desired_operators < max_slots:
+			workers_label.text = "%d/%d (%d)" % [present, _building.desired_operators, max_slots]
+		else:
+			workers_label.text = "%d/%d" % [present, max_slots]
+		workers_dec_btn.visible = _building.is_built
+		workers_inc_btn.visible = _building.is_built
+		workers_dec_btn.disabled = (_building.desired_operators <= 0)
+		workers_inc_btn.disabled = (_building.desired_operators >= max_slots)
 	else:
 		workers_row.visible = false
 
@@ -105,7 +130,7 @@ func refresh() -> void:
 	if can_upg:
 		upgrade_btn.tooltip_text = _make_upgrade_tooltip(_building)
 
-	var show_retrain: bool = _building.is_built and (_building.behavior is QueenBehavior or _building.behavior is KindergartenBehavior or _building.behavior is ApartmentsBehavior)
+	var show_retrain: bool = _building.is_built and (_building.data.worker_slots > 0 or _building.behavior is QueenBehavior or _building.behavior is KindergartenBehavior or _building.behavior is ApartmentsBehavior)
 	retrain_btn.visible = show_retrain
 	lab_btn.visible = _building.behavior is LabBehavior and _building.is_built
 	demolish_btn.visible = _building.data.id != &"queen"
@@ -116,7 +141,9 @@ func _make_upgrade_tooltip(b: Building) -> String:
 	var parts: Array[String] = []
 	for t: GameEnums.ResourceType in cost.keys():
 		parts.append("%s %d" % [GameEnums.resource_name(t), int(cost[t])])
-	var bonus: String = "+35% прочность, +35% урон, +20% скорость" if b.data is TowerData else "+35% прочность, +45% выпуск"
+	var bonus: String = b.data.get_upgrade_summary(_balance)
+	if bonus.is_empty():
+		return "Улучшить до Ур.2\n%s" % " · ".join(parts)
 	return "Улучшить до Ур.2\n%s\n%s" % [bonus, " · ".join(parts)]
 
 

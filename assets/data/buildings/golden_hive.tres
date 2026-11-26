@@ -18,3 +18,4 @@ max_hp = 500.0
 color = Color(1, 0.9, 0.4, 1)
 required_research = &"golden_hive"
 max_count = 1
+sort_order = 10

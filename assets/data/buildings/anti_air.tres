@@ -27,3 +27,4 @@ splash_radius = 0.0
 slow_factor = 1.0
 slow_duration = 0.0
 projectile_color = Color(0.5, 1, 0.85, 1)
+sort_order = 20

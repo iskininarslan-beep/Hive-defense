@@ -85,9 +85,10 @@ func is_at_work() -> bool:
 
 
 func _get_speed() -> float:
+	var base: float = _context.balance.bee_speed if (_context != null and _context.balance != null) else SPEED
 	if _context != null and _context.modifiers != null:
-		return SPEED * _context.modifiers.multiplier(StatModifiers.BEE_SPEED)
-	return SPEED
+		return base * _context.modifiers.multiplier(StatModifiers.BEE_SPEED)
+	return base
 
 
 func _process(delta: float) -> void:
@@ -108,7 +109,10 @@ func _process(delta: float) -> void:
 			if not is_instance_valid(assigned_building):
 				release()
 				return
-			global_position = assigned_building.global_position
+			var slot_off: Vector2 = assigned_building.get_worker_slot_offset(self)
+			var hover: Vector2 = Vector2(sin(_anim_time * 3.4) * 1.6, cos(_anim_time * 4.1) * 1.4)
+			var desired_pos: Vector2 = assigned_building.global_position + slot_off + hover
+			global_position = global_position.lerp(desired_pos, minf(1.0, delta * 10.0))
 			queue_redraw()
 		State.TRIP_OUT:
 			if not is_instance_valid(assigned_building):
@@ -185,7 +189,23 @@ func _get_body_color() -> Color:
 
 func _draw() -> void:
 	if state == State.RETRAINING:
-		draw_arc(Vector2.ZERO, 9.0, 0.0, TAU, 16, Color(1.0, 0.88, 0.25, 0.9), 2.0)
+		draw_arc(Vector2.ZERO, 9.5, 0.0, TAU, 18, Color(1.0, 0.88, 0.25, 0.95), 2.0)
 	var wing_w: float = 3.5 + sin(_anim_time * 36.0) * 0.8
 	StripedDrawer.draw_wings(self, Vector2.ZERO, Vector2(-1.0, 5.0), Vector2(wing_w, 2.0), _facing)
 	StripedDrawer.draw_striped_body(self, Vector2.ZERO, Vector2(6.0, 4.0), _facing, _get_body_color(), Color(0.1, 0.08, 0.05, 1.0), 2)
+	draw_set_transform(Vector2.ZERO, _facing, Vector2.ONE)
+	match role:
+		GameEnums.BeeRole.GATHERER:
+			draw_circle(Vector2(-1.0, -3.8), 1.6, Color(1.0, 0.95, 0.45, 0.95))
+			draw_circle(Vector2(-1.0, 3.8), 1.6, Color(1.0, 0.95, 0.45, 0.95))
+		GameEnums.BeeRole.BUILDER:
+			draw_circle(Vector2(6.8, 0.0), 1.9, Color(0.96, 0.76, 0.24, 0.95))
+		GameEnums.BeeRole.SOLDIER:
+			var stinger: PackedVector2Array = PackedVector2Array([
+				Vector2(-5.5, -1.6),
+				Vector2(-9.5, 0.0),
+				Vector2(-5.5, 1.6),
+			])
+			draw_colored_polygon(stinger, Color(0.14, 0.1, 0.08, 1.0))
+			draw_circle(Vector2(4.2, 0.0), 2.3, Color(0.95, 0.22, 0.2, 1.0))
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)

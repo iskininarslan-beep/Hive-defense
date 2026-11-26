@@ -14,6 +14,7 @@ var is_built: bool = false
 var progress: float = 0.0
 var is_selected: bool = false
 var level: int = 1
+var desired_operators: int = 0
 var operators: Array[Bee] = []
 var builders: Array[Bee] = []
 var behavior: BuildingBehavior
@@ -21,6 +22,8 @@ var behavior: BuildingBehavior
 var _context: GameContext
 var _hex_size: float = 22.0
 var _base_max_hp: float = 100.0
+var _last_hp_seen: float = 100.0
+var _under_attack_timer: float = 0.0
 
 
 func setup(
@@ -38,12 +41,14 @@ func setup(
 	_hex_size = hex_size
 	_base_max_hp = data.max_hp
 	level = 1
+	desired_operators = maxi(0, data.worker_slots)
 
 	var start_ratio: float = 1.0 if (instant or data.build_time <= 0.0) else 0.25
 	var hp_mult: float = _context.modifiers.multiplier(StatModifiers.BUILDING_HP) if (_context != null and _context.modifiers != null) else 1.0
 	health.setup(_base_max_hp * hp_mult, start_ratio)
+	_last_hp_seen = health.current
 	health.died.connect(_on_health_died)
-	health.health_changed.connect(func(_c: float, _m: float) -> void: queue_redraw())
+	health.health_changed.connect(_on_health_changed)
 	if _context != null and _context.modifiers != null:
 		_context.modifiers.changed.connect(_on_modifier_changed)
 
@@ -64,6 +69,13 @@ func setup(
 	queue_redraw()
 
 
+func _on_health_changed(current: float, _max_hp: float) -> void:
+	if current < _last_hp_seen - 0.01:
+		_under_attack_timer = 2.5
+	_last_hp_seen = current
+	queue_redraw()
+
+
 func _on_modifier_changed(key: StringName) -> void:
 	if key == StatModifiers.BUILDING_HP:
 		_refresh_max_hp()
@@ -72,7 +84,8 @@ func _on_modifier_changed(key: StringName) -> void:
 func _refresh_max_hp() -> void:
 	if _context == null or _context.modifiers == null or health == null:
 		return
-	var lvl_mult: float = 1.35 if level >= 2 else 1.0
+	var upg_mult: float = _context.balance.upgrade_hp_mult if _context.balance != null else 1.35
+	var lvl_mult: float = upg_mult if level >= 2 else 1.0
 	var target_max: float = _base_max_hp * _context.modifiers.multiplier(StatModifiers.BUILDING_HP) * lvl_mult
 	var gain: float = maxf(0.0, target_max - health.max_health)
 	health.max_health = target_max
@@ -82,20 +95,22 @@ func _refresh_max_hp() -> void:
 
 
 func can_upgrade() -> bool:
-	return is_built and level == 1 and (data is TowerData or data is FactoryData or data is GatherData)
+	return is_built and level == 1 and data != null and data.can_upgrade_level()
 
 
 func get_upgrade_cost() -> Dictionary[GameEnums.ResourceType, float]:
 	var cost: Dictionary[GameEnums.ResourceType, float] = {}
 	if data == null:
 		return cost
+	var min_wax: float = _context.balance.upgrade_min_wax_cost if (_context != null and _context.balance != null) else 25.0
+	var honey_add: float = _context.balance.upgrade_honey_surcharge if (_context != null and _context.balance != null) else 20.0
 	var base: Dictionary[GameEnums.ResourceType, float] = data.get_cost()
 	for t: GameEnums.ResourceType in base.keys():
 		var rounded: float = ceilf((base[t] * 0.5) / 5.0) * 5.0
 		if rounded > 0.0:
 			cost[t] = rounded
-	cost[GameEnums.ResourceType.WAX] = maxf(25.0, cost.get(GameEnums.ResourceType.WAX, 0.0))
-	cost[GameEnums.ResourceType.HONEY] = cost.get(GameEnums.ResourceType.HONEY, 0.0) + 20.0
+	cost[GameEnums.ResourceType.WAX] = maxf(min_wax, cost.get(GameEnums.ResourceType.WAX, 0.0))
+	cost[GameEnums.ResourceType.HONEY] = cost.get(GameEnums.ResourceType.HONEY, 0.0) + honey_add
 	return cost
 
 
@@ -123,9 +138,52 @@ func get_hex_size() -> float:
 	return _hex_size
 
 
+func is_under_attack() -> bool:
+	return _under_attack_timer > 0.0
+
+
+func is_work_stalled() -> bool:
+	return behavior != null and behavior.is_work_stalled()
+
+
+func set_desired_operators(count: int) -> void:
+	var max_slots: int = data.worker_slots if data != null else 0
+	desired_operators = clampi(count, 0, max_slots)
+	_prune_workers()
+	while operators.size() > desired_operators:
+		var bee: Bee = operators.pop_back()
+		if is_instance_valid(bee):
+			bee.release()
+	queue_redraw()
+
+
+func release_one_operator() -> Bee:
+	_prune_workers()
+	if operators.is_empty():
+		return null
+	var bee: Bee = operators.pop_back()
+	if is_instance_valid(bee):
+		bee.release()
+	queue_redraw()
+	return bee if is_instance_valid(bee) else null
+
+
+func release_one_builder() -> Bee:
+	_prune_workers()
+	if builders.is_empty():
+		return null
+	var bee: Bee = builders.pop_back()
+	if is_instance_valid(bee):
+		bee.release()
+	queue_redraw()
+	return bee if is_instance_valid(bee) else null
+
+
 func _process(delta: float) -> void:
 	if data == null:
 		return
+	if _under_attack_timer > 0.0:
+		_under_attack_timer = maxf(0.0, _under_attack_timer - delta)
 	_prune_workers()
 	if not is_built:
 		var present: int = get_present_builders()
@@ -147,7 +205,10 @@ func _process(delta: float) -> void:
 		if health.current < health.max_health:
 			var present_b: int = get_present_builders()
 			if present_b > 0:
-				health.heal(4.0 * float(present_b) * delta)
+				var repair_rate: float = 4.0
+				if _context != null and _context.balance != null:
+					repair_rate = _context.balance.combat_repair_hp_per_sec if is_under_attack() else _context.balance.repair_hp_per_sec
+				health.heal(repair_rate * float(present_b) * delta)
 				if health.current >= health.max_health:
 					_release_builders()
 		elif not builders.is_empty():
@@ -156,8 +217,11 @@ func _process(delta: float) -> void:
 
 func get_builder_demand() -> int:
 	_prune_workers()
-	if not is_built or health.current < health.max_health:
+	if not is_built:
 		return maxi(0, 3 - builders.size())
+	if health.current < health.max_health:
+		var max_repairers: int = 1 if is_under_attack() else 2
+		return maxi(0, max_repairers - builders.size())
 	return 0
 
 
@@ -165,7 +229,7 @@ func get_operator_demand() -> int:
 	_prune_workers()
 	if not is_built:
 		return 0
-	return maxi(0, data.worker_slots - operators.size())
+	return maxi(0, desired_operators - operators.size())
 
 
 func add_operator(bee: Bee) -> void:
@@ -256,6 +320,22 @@ func _prune_workers() -> void:
 			builders.remove_at(i)
 
 
+func get_worker_slot_offset(bee: Bee) -> Vector2:
+	var idx: int = operators.find(bee)
+	if idx >= 0:
+		var count: int = maxi(1, operators.size())
+		var angle: float = -PI * 0.5 + TAU * float(idx) / float(count)
+		var r: float = _hex_size * (1.1 if data != null and data.footprint_radius >= 1 else 0.48)
+		return Vector2(cos(angle), sin(angle)) * r
+	var bidx: int = builders.find(bee)
+	if bidx >= 0:
+		var bcount: int = maxi(1, builders.size())
+		var angle: float = PI * 0.25 + TAU * float(bidx) / float(bcount)
+		var r: float = _hex_size * (1.45 if data != null and data.footprint_radius >= 1 else 0.65)
+		return Vector2(cos(angle), sin(angle)) * r
+	return Vector2.ZERO
+
+
 func _draw() -> void:
 	if data == null:
 		return
@@ -295,8 +375,12 @@ func _draw() -> void:
 		var start_x: float = -float(data.worker_slots - 1) * 4.0
 		for i: int in range(data.worker_slots):
 			var dot_pos: Vector2 = Vector2(start_x + float(i) * 8.0, _hex_size * 0.62)
-			var dot_col: Color = Color(0.2, 0.95, 0.35, 1.0) if i < present else Color(0.2, 0.2, 0.2, 0.75)
-			draw_circle(dot_pos, 2.4, dot_col)
+			if i >= desired_operators:
+				draw_circle(dot_pos, 2.3, Color(0.15, 0.15, 0.15, 0.45))
+				draw_arc(dot_pos, 2.3, 0.0, TAU, 10, Color(0.6, 0.55, 0.45, 0.6), 0.9)
+			else:
+				var dot_col: Color = Color(0.2, 0.95, 0.35, 1.0) if i < present else Color(0.2, 0.2, 0.2, 0.75)
+				draw_circle(dot_pos, 2.4, dot_col)
 
 	if health != null and health.current < health.max_health:
 		var bar_w: float = 54.0 if data.footprint_radius >= 1 else 28.0

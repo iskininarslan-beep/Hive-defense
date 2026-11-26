@@ -17,3 +17,4 @@ cost_nectar = 55.0
 cost_honey = 55.0
 time = 25.0
 ending = 0
+sort_order = 10

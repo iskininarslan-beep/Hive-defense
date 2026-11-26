@@ -7,7 +7,7 @@
 script = ExtResource("1_s")
 id = &"ladybug"
 display_name = "Божья коровка"
-layer = 1
+layer = 0
 max_hp = 260.0
 speed = 28.0
 damage = 20.0

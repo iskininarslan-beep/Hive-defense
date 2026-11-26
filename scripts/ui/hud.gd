@@ -13,6 +13,39 @@ signal lab_open_requested
 signal upgrade_requested(b: Building)
 signal retrain_requested(from_role: GameEnums.BeeRole, to_role: GameEnums.BeeRole)
 signal call_wave_requested
+signal workers_adjust_requested(b: Building, delta: int)
+
+
+class BuildingButtonEntry extends RefCounted:
+	var btn: Button
+	var data: BuildingData
+
+	func _init(p_btn: Button, p_data: BuildingData) -> void:
+		btn = p_btn
+		data = p_data
+
+
+class AbilityButtonEntry extends RefCounted:
+	var btn: Button
+	var label: Label
+	var ability: Ability
+
+	func _init(p_btn: Button, p_lbl: Label, p_ab: Ability) -> void:
+		btn = p_btn
+		label = p_lbl
+		ability = p_ab
+
+
+class RetrainRowEntry extends RefCounted:
+	var role: GameEnums.BeeRole
+	var label: Label
+	var btns: Array[Button] = []
+
+	func _init(p_role: GameEnums.BeeRole, p_lbl: Label, p_btns: Array[Button]) -> void:
+		role = p_role
+		label = p_lbl
+		btns = p_btns
+
 
 @onready var pollen_chip: HBoxContainer = %PollenChip
 @onready var pollen_label: Label = %PollenLabel
@@ -50,9 +83,9 @@ var _build_controller: BuildController
 
 var _comb_btn: Button
 var _delete_btn: Button
-var _building_buttons: Array[Dictionary] = []
-var _ability_buttons: Array[Dictionary] = []
-var _retrain_rows: Array[Dictionary] = []
+var _building_buttons: Array[BuildingButtonEntry] = []
+var _ability_buttons: Array[AbilityButtonEntry] = []
+var _retrain_rows: Array[RetrainRowEntry] = []
 var _toast_tween: Tween = null
 var _pulse_tween: Tween = null
 
@@ -79,6 +112,11 @@ func setup(
 	call_wave_btn.icon = GameIcons.UI_WAVE_NEXT
 	call_wave_btn.focus_mode = Control.FOCUS_NONE
 	call_wave_btn.pressed.connect(func() -> void: call_wave_requested.emit())
+	if _context != null and _context.balance != null:
+		call_wave_btn.tooltip_text = "Вызвать волну раньше (+%d воска, +%d мёда)" % [
+			int(_context.balance.early_wave_wax_bonus),
+			int(_context.balance.early_wave_honey_bonus),
+		]
 
 	pause_btn.icon = GameIcons.UI_PAUSE
 	speed_btn.icon = GameIcons.UI_SPEED
@@ -97,11 +135,13 @@ func setup(
 	retrain_close_btn.pressed.connect(close_retrain_panel)
 	retrain_panel.visible = false
 
+	building_panel.set_balance_config(_context.balance if _context != null else null)
 	building_panel.demolish_requested.connect(func(b: Building) -> void: demolish_requested.emit(b))
 	building_panel.role_requested.connect(func(b: Building, role: GameEnums.BeeRole) -> void: kindergarten_role_requested.emit(b, role))
 	building_panel.research_requested.connect(func() -> void: lab_open_requested.emit())
 	building_panel.upgrade_requested.connect(func(b: Building) -> void: upgrade_requested.emit(b))
 	building_panel.retrain_panel_requested.connect(open_retrain_panel)
+	building_panel.workers_adjust_requested.connect(func(b: Building, d: int) -> void: workers_adjust_requested.emit(b, d))
 
 	_build_controller.building_selected.connect(show_building)
 	_build_controller.mode_changed.connect(_on_build_mode_changed)
@@ -298,19 +338,18 @@ func _build_retrain_rows() -> void:
 			target_btns.append(btn)
 
 		retrain_rows_box.add_child(row)
-		_retrain_rows.append({"role": from_role, "label": cnt_lbl, "btns": target_btns})
+		_retrain_rows.append(RetrainRowEntry.new(from_role, cnt_lbl, target_btns))
 
 
 func _refresh_retrain_rows() -> void:
 	if _context == null or _context.colony == null:
 		return
-	for item: Dictionary in _retrain_rows:
-		var r: GameEnums.BeeRole = item["role"] as GameEnums.BeeRole
-		var lbl: Label = item["label"] as Label
-		var count: int = _context.colony.get_count(r)
-		lbl.text = str(count)
-		for btn: Button in item["btns"]:
-			btn.disabled = (count <= 0)
+	for item: RetrainRowEntry in _retrain_rows:
+		var count: int = _context.colony.get_count(item.role)
+		var ready: int = _context.colony.get_retrainable_count(item.role)
+		item.label.text = str(count)
+		for btn: Button in item.btns:
+			btn.disabled = (ready <= 0)
 
 
 func _build_bottom_bar() -> void:
@@ -318,7 +357,8 @@ func _build_bottom_bar() -> void:
 		child.queue_free()
 	_building_buttons.clear()
 
-	_comb_btn = _make_bar_button(GameIcons.UI_COMB, "Соты (Воск 5)\nЗажмите ЛКМ для рисования сот")
+	var comb_cost: int = int(_context.balance.comb_wax_cost) if (_context != null and _context.balance != null) else 5
+	_comb_btn = _make_bar_button(GameIcons.UI_COMB, "Соты (Воск %d)\nЗажмите ЛКМ для рисования сот" % comb_cost)
 	_comb_btn.pressed.connect(func() -> void: comb_mode_requested.emit())
 	build_bar_box.add_child(_comb_btn)
 
@@ -337,7 +377,7 @@ func _build_bottom_bar() -> void:
 		var btn: Button = _make_bar_button(data.icon, "")
 		btn.pressed.connect(func() -> void: build_requested.emit(data))
 		build_bar_box.add_child(btn)
-		_building_buttons.append({"btn": btn, "data": data})
+		_building_buttons.append(BuildingButtonEntry.new(btn, data))
 	_refresh_build_bar()
 
 
@@ -361,19 +401,17 @@ func _refresh_build_bar() -> void:
 	if _delete_btn != null:
 		_delete_btn.modulate = Color(1.0, 0.55, 0.45) if active_mode == BuildController.Mode.DELETE else Color.WHITE
 
-	for item: Dictionary in _building_buttons:
-		var btn: Button = item["btn"] as Button
-		var data: BuildingData = item["data"] as BuildingData
-		var locked: bool = data.required_research != &"" and not _research.is_completed(data.required_research)
-		var at_limit: bool = data.max_count > 0 and _context.arena.count_all(data.id) >= data.max_count
-		btn.disabled = locked or at_limit
-		if btn.disabled:
-			btn.modulate = Color(0.45, 0.45, 0.45, 0.8)
-		elif active_mode == BuildController.Mode.BUILD and active_data == data:
-			btn.modulate = Color(1.0, 0.92, 0.4)
+	for item: BuildingButtonEntry in _building_buttons:
+		var locked: bool = item.data.required_research != &"" and not _research.is_completed(item.data.required_research)
+		var at_limit: bool = item.data.max_count > 0 and _context.arena.count_all(item.data.id) >= item.data.max_count
+		item.btn.disabled = locked or at_limit
+		if item.btn.disabled:
+			item.btn.modulate = Color(0.58, 0.58, 0.62, 0.88)
+		elif active_mode == BuildController.Mode.BUILD and active_data == item.data:
+			item.btn.modulate = Color(1.0, 0.92, 0.4)
 		else:
-			btn.modulate = Color.WHITE
-		btn.tooltip_text = _build_tooltip(data, locked, at_limit)
+			item.btn.modulate = Color.WHITE
+		item.btn.tooltip_text = _build_tooltip(item.data, locked, at_limit)
 
 
 func _build_tooltip(data: BuildingData, locked: bool, at_limit: bool) -> String:
@@ -422,27 +460,24 @@ func _rebuild_abilities() -> void:
 		btn.add_child(cd_lbl)
 
 		ability_bar.add_child(btn)
-		_ability_buttons.append({"btn": btn, "label": cd_lbl, "ability": ability})
+		_ability_buttons.append(AbilityButtonEntry.new(btn, cd_lbl, ability))
 	_refresh_abilities()
 
 
 func _refresh_abilities() -> void:
-	for item: Dictionary in _ability_buttons:
-		var btn: Button = item["btn"] as Button
-		var lbl: Label = item["label"] as Label
-		var ab: Ability = item["ability"] as Ability
-		if ab.is_active():
-			btn.disabled = true
-			btn.modulate = Color(0.45, 0.95, 0.55)
-			lbl.text = "%d" % int(ceilf(ab.get_active_left()))
-		elif ab.get_cooldown_left() > 0.0:
-			btn.disabled = true
-			btn.modulate = Color(0.55, 0.55, 0.55)
-			lbl.text = "%d" % int(ceilf(ab.get_cooldown_left()))
+	for item: AbilityButtonEntry in _ability_buttons:
+		if item.ability.is_active():
+			item.btn.disabled = true
+			item.btn.modulate = Color(0.45, 0.95, 0.55)
+			item.label.text = "%d" % int(ceilf(item.ability.get_active_left()))
+		elif item.ability.get_cooldown_left() > 0.0:
+			item.btn.disabled = true
+			item.btn.modulate = Color(0.55, 0.55, 0.55)
+			item.label.text = "%d" % int(ceilf(item.ability.get_cooldown_left()))
 		else:
-			btn.disabled = false
-			btn.modulate = Color.WHITE
-			lbl.text = ""
+			item.btn.disabled = false
+			item.btn.modulate = Color.WHITE
+			item.label.text = ""
 
 
 func _on_build_mode_changed(_mode: BuildController.Mode, _data: BuildingData) -> void:

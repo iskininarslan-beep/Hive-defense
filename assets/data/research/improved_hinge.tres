@@ -19,3 +19,4 @@ time = 30.0
 modifier_keys = PackedStringArray("factory_speed")
 modifier_values = PackedFloat32Array(0.5)
 ending = 0
+sort_order = 10

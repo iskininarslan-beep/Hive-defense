@@ -18,3 +18,4 @@ cost_wax = 210.0
 cost_honey = 160.0
 time = 45.0
 ending = 1
+sort_order = 10

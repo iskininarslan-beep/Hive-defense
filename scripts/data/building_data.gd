@@ -22,6 +22,15 @@ extends Resource
 @export var worker_slots: int = 0
 @export var required_research: StringName = &""
 @export var max_count: int = 0
+@export var sort_order: int = 100
+
+
+func can_upgrade_level() -> bool:
+	return false
+
+
+func get_upgrade_summary(_cfg: GameBalanceConfig) -> String:
+	return ""
 
 
 func get_cost() -> Dictionary[GameEnums.ResourceType, float]:

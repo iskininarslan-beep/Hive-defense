@@ -4,7 +4,7 @@ extends Node
 signal population_changed(total: int, cap: int)
 signal balance_changed(status: GameEnums.BalanceStatus)
 
-const BASE_CAP: int = 14
+const DEFAULT_BASE_CAP: int = 14
 const ASSIGN_INTERVAL: float = 0.4
 
 @export var bee_scene: PackedScene
@@ -24,11 +24,14 @@ func setup(context: GameContext) -> void:
 
 func spawn_initial_bees() -> void:
 	var queen_pos: Vector2 = _get_queen_pos()
-	for i: int in range(6):
+	var g_count: int = _context.balance.initial_gatherers if _context.balance != null else 6
+	var b_count: int = _context.balance.initial_builders if _context.balance != null else 3
+	var s_count: int = _context.balance.initial_soldiers if _context.balance != null else 3
+	for i: int in range(g_count):
 		spawn_bee(GameEnums.BeeRole.GATHERER, queen_pos + Vector2(randf_range(-20.0, 20.0), randf_range(-20.0, 20.0)))
-	for i: int in range(3):
+	for i: int in range(b_count):
 		spawn_bee(GameEnums.BeeRole.BUILDER, queen_pos + Vector2(randf_range(-20.0, 20.0), randf_range(-20.0, 20.0)))
-	for i: int in range(3):
+	for i: int in range(s_count):
 		spawn_bee(GameEnums.BeeRole.SOLDIER, queen_pos + Vector2(randf_range(-20.0, 20.0), randf_range(-20.0, 20.0)))
 
 
@@ -46,11 +49,13 @@ func spawn_bee(role: GameEnums.BeeRole, pos: Vector2) -> Bee:
 
 
 func get_cap() -> int:
+	var base_cap: int = _context.balance.base_bee_cap if (_context != null and _context.balance != null) else DEFAULT_BASE_CAP
 	if _context == null or _context.arena == null:
-		return BASE_CAP
+		return base_cap
 	var apt_count: int = _context.arena.count_completed(&"apartments")
+	var apt_base: int = _context.balance.apartments_base_cap_bonus if _context.balance != null else 6
 	var bonus_each: int = int(roundf(_context.modifiers.get_value(StatModifiers.APARTMENTS_CAP_BONUS)))
-	return maxi(1, BASE_CAP + apt_count * (6 + bonus_each))
+	return maxi(1, base_cap + apt_count * (apt_base + bonus_each))
 
 
 func get_count(role: GameEnums.BeeRole) -> int:
@@ -58,6 +63,15 @@ func get_count(role: GameEnums.BeeRole) -> int:
 	var count: int = 0
 	for bee: Bee in _bees:
 		if bee.get_effective_role() == role:
+			count += 1
+	return count
+
+
+func get_retrainable_count(role: GameEnums.BeeRole) -> int:
+	_prune_bees()
+	var count: int = 0
+	for bee: Bee in _bees:
+		if bee.role == role and bee.state != Bee.State.RETRAINING:
 			count += 1
 	return count
 
@@ -83,26 +97,34 @@ func retrain_bee(from_role: GameEnums.BeeRole, to_role: GameEnums.BeeRole) -> bo
 	if from_role == to_role or from_role == GameEnums.BeeRole.NONE or to_role == GameEnums.BeeRole.NONE:
 		return false
 	_prune_bees()
-	var chosen: Bee = null
-	for bee: Bee in _bees:
-		if bee.role == from_role and bee.state == Bee.State.IDLE:
-			chosen = bee
-			break
-	if chosen == null:
-		for bee: Bee in _bees:
-			if bee.role == from_role and bee.state != Bee.State.RETRAINING:
-				chosen = bee
-				break
+	var chosen: Bee = _pick_bee_to_retrain(from_role)
 	if chosen == null:
 		return false
 	if is_instance_valid(chosen.assigned_building):
 		chosen.assigned_building.remove_worker(chosen)
 	if not chosen.retrained.is_connected(_on_bee_retrained):
 		chosen.retrained.connect(_on_bee_retrained)
-	var dur: float = 2.0 / _context.modifiers.multiplier(StatModifiers.TRAINING_SPEED)
+	var base_dur: float = _context.balance.retrain_duration if _context.balance != null else 2.0
+	var dur: float = base_dur / _context.modifiers.multiplier(StatModifiers.TRAINING_SPEED)
 	chosen.start_retrain(to_role, _get_queen_pos(), dur)
 	_emit_population_and_balance()
 	return true
+
+
+func _pick_bee_to_retrain(from_role: GameEnums.BeeRole) -> Bee:
+	for bee: Bee in _bees:
+		if bee.role == from_role and bee.state == Bee.State.IDLE:
+			return bee
+	for bee: Bee in _bees:
+		if bee.role == from_role and bee.state != Bee.State.RETRAINING and is_instance_valid(bee.assigned_building) and bee.assigned_building.is_work_stalled():
+			return bee
+	for bee: Bee in _bees:
+		if bee.role == from_role and bee.state != Bee.State.RETRAINING and is_instance_valid(bee.assigned_building) and not (bee.assigned_building.data is TowerData):
+			return bee
+	for bee: Bee in _bees:
+		if bee.role == from_role and bee.state != Bee.State.RETRAINING:
+			return bee
+	return null
 
 
 func _on_bee_retrained(_bee: Bee, _new_role: GameEnums.BeeRole) -> void:
@@ -133,11 +155,47 @@ func _process(delta: float) -> void:
 		_assign_idle_bees()
 
 
+func trigger_assign_now() -> void:
+	if _context == null:
+		return
+	_assign_timer = ASSIGN_INTERVAL
+	_assign_idle_bees()
+
+
 func _assign_idle_bees() -> void:
 	_prune_bees()
 	var buildings: Array[Building] = _context.arena.get_buildings()
+	_assign_builders(buildings)
+	_assign_operators(buildings)
 
+
+func _assign_builders(buildings: Array[Building]) -> void:
+	var unbuilt: Array[Building] = []
+	var damaged: Array[Building] = []
 	for b: Building in buildings:
+		if not b.is_built:
+			unbuilt.append(b)
+		elif b.health.current < b.health.max_health:
+			damaged.append(b)
+
+	# 1. Construction blueprints take strict priority over routine repair
+	for b: Building in unbuilt:
+		var demand: int = b.get_builder_demand()
+		while demand > 0:
+			var builder: Bee = _find_closest_idle_bee(GameEnums.BeeRole.BUILDER, b.global_position)
+			if builder == null and b.builders.size() < 2:
+				builder = _reclaim_repair_builder(damaged)
+			if builder == null:
+				break
+			b.add_builder(builder)
+			builder.assign_to(b)
+			demand -= 1
+
+	# 2. Repair damaged buildings (Queen > Defense > Others)
+	damaged.sort_custom(func(a: Building, b: Building) -> bool:
+		return _repair_priority(a) < _repair_priority(b)
+	)
+	for b: Building in damaged:
 		var demand: int = b.get_builder_demand()
 		while demand > 0:
 			var builder: Bee = _find_closest_idle_bee(GameEnums.BeeRole.BUILDER, b.global_position)
@@ -147,20 +205,69 @@ func _assign_idle_bees() -> void:
 			builder.assign_to(b)
 			demand -= 1
 
+
+func _reclaim_repair_builder(damaged: Array[Building]) -> Bee:
+	var candidates: Array[Building] = damaged.duplicate()
+	candidates.sort_custom(func(a: Building, b: Building) -> bool:
+		return _repair_priority(a) > _repair_priority(b)
+	)
+	for donor: Building in candidates:
+		if donor.data != null and donor.data.id == &"queen" and donor.builders.size() <= 1:
+			continue
+		if not donor.builders.is_empty():
+			return donor.release_one_builder()
+	return null
+
+
+func _repair_priority(b: Building) -> int:
+	if b.data != null and b.data.id == &"queen":
+		return 0
+	if b.data is TowerData:
+		return 1
+	return 2
+
+
+func _assign_operators(buildings: Array[Building]) -> void:
+	var active_need: Array[Building] = []
+	var stalled_with_workers: Array[Building] = []
 	for b: Building in buildings:
-		if not b.is_built:
+		if not b.is_built or b.data == null or b.data.worker_role == GameEnums.BeeRole.NONE:
 			continue
-		var role: GameEnums.BeeRole = b.data.worker_role
-		if role == GameEnums.BeeRole.NONE:
-			continue
-		var demand: int = b.get_operator_demand()
-		while demand > 0:
-			var worker: Bee = _find_closest_idle_bee(role, b.global_position)
+		if b.is_work_stalled():
+			if not b.operators.is_empty():
+				stalled_with_workers.append(b)
+		elif b.get_operator_demand() > 0:
+			active_need.append(b)
+
+	# Fairly fill active buildings with fewest current operators first
+	while not active_need.is_empty():
+		active_need.sort_custom(func(a: Building, b: Building) -> bool:
+			return a.operators.size() < b.operators.size()
+		)
+		var assigned_any: bool = false
+		for i: int in range(active_need.size() - 1, -1, -1):
+			var b: Building = active_need[i]
+			if b.get_operator_demand() <= 0:
+				active_need.remove_at(i)
+				continue
+			var worker: Bee = _find_closest_idle_bee(b.data.worker_role, b.global_position)
 			if worker == null:
-				break
-			b.add_operator(worker)
-			worker.assign_to(b)
-			demand -= 1
+				worker = _pull_stalled_operator(stalled_with_workers, b.data.worker_role)
+			if worker != null:
+				b.add_operator(worker)
+				worker.assign_to(b)
+				assigned_any = true
+			if b.get_operator_demand() <= 0:
+				active_need.remove_at(i)
+		if not assigned_any:
+			break
+
+
+func _pull_stalled_operator(stalled_list: Array[Building], role: GameEnums.BeeRole) -> Bee:
+	for donor: Building in stalled_list:
+		if donor.data != null and donor.data.worker_role == role and not donor.operators.is_empty():
+			return donor.release_one_operator()
+	return null
 
 
 func _find_closest_idle_bee(role: GameEnums.BeeRole, target_pos: Vector2) -> Bee:

@@ -24,6 +24,7 @@ var _leave_dir: Vector2 = Vector2.RIGHT
 var _no_storage_steals: int = 0
 var _facing: float = 0.0
 var _ally_orbit_angle: float = 0.0
+var _slot_angle_offset: float = 0.0
 var _speed_mult: float = 1.0
 var _dmg_mult: float = 1.0
 var _hit_flash: float = 0.0
@@ -36,6 +37,7 @@ func setup(p_data: EnemyData, p_context: GameContext, p_faction: GameEnums.Facti
 	_context = p_context
 	faction = p_faction
 	_ally_orbit_angle = randf() * TAU
+	_slot_angle_offset = randf_range(-0.65, 0.65)
 	health.setup(p_data.max_hp * hp_mult, 1.0)
 	_last_hp = health.current
 	health.died.connect(_on_health_died)
@@ -150,6 +152,9 @@ func _process(delta: float) -> void:
 		_process_ally(delta)
 	else:
 		_process_hostile(delta)
+		_apply_separation(delta)
+	if _visual != null:
+		_visual.step_anim(delta)
 
 
 func _process_hostile(delta: float) -> void:
@@ -160,17 +165,44 @@ func _process_hostile(delta: float) -> void:
 	var target: Building = _pick_building_target()
 	if not is_instance_valid(target):
 		return
-	var diff: Vector2 = target.global_position - global_position
-	var dist: float = diff.length()
+	var to_target: Vector2 = target.global_position - global_position
+	var dist: float = to_target.length()
 	var atk_range: float = data.radius + target.get_hit_radius()
 	var spd: float = data.speed * _speed_mult * _slow_factor
 	if dist > atk_range:
-		_move_step(diff, dist, spd, delta)
+		var move_dir: Vector2 = to_target
+		if dist < atk_range * 2.8 and absf(_slot_angle_offset) > 0.05:
+			var from_target: Vector2 = (global_position - target.global_position).normalized()
+			var slot_pos: Vector2 = target.global_position + from_target.rotated(_slot_angle_offset * 0.45) * (atk_range * 0.9)
+			move_dir = slot_pos - global_position
+		_move_step(move_dir, move_dir.length(), spd, delta)
 	else:
-		_set_facing(diff.angle())
+		_set_facing(to_target.angle())
 		if _atk_timer <= 0.0:
 			target.health.take_damage(data.damage * _dmg_mult)
 			_atk_timer = data.attack_interval
+
+
+func _apply_separation(delta: float) -> void:
+	if _context == null or data == null:
+		return
+	var push: Vector2 = Vector2.ZERO
+	var my_layer: GameEnums.TargetLayer = get_layer()
+	for other: Enemy in _context.get_enemies():
+		if other == self or other._emerging or other._leaving:
+			continue
+		if other.faction != faction or other.get_layer() != my_layer:
+			continue
+		var min_sep: float = (data.radius + other.data.radius) * 1.35
+		var diff: Vector2 = global_position - other.global_position
+		var d2: float = diff.length_squared()
+		if d2 < min_sep * min_sep:
+			var d: float = sqrt(d2)
+			var dir: Vector2 = (diff / d) if d > 0.05 else Vector2.RIGHT.rotated(float(get_instance_id() % 360) * 0.01745)
+			push += dir * ((min_sep - d) / maxf(1.0, min_sep))
+	if push.length_squared() > 0.0001:
+		var max_push: float = data.speed * _speed_mult * 0.85 * delta
+		global_position += push.limit_length(1.0) * max_push
 
 
 func _process_mole_cricket(delta: float) -> void:

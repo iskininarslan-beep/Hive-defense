@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/intro_screen.gd" id="1_in"]
+[ext_resource type="Texture2D" path="res://assets/icons/ui_crown.svg" id="2_cr"]
 
 [node name="IntroScreen" type="Control"]
 layout_mode = 3
@@ -27,17 +28,25 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -330.0
-offset_top = -150.0
-offset_right = 330.0
-offset_bottom = 150.0
+offset_left = -350.0
+offset_top = -175.0
+offset_right = 350.0
+offset_bottom = 175.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="VBox" type="VBoxContainer" parent="CenterPanel"]
 layout_mode = 2
 alignment = 1
-theme_override_constants/separation = 14
+theme_override_constants/separation = 12
+
+[node name="CrownIcon" type="TextureRect" parent="CenterPanel/VBox"]
+custom_minimum_size = Vector2(54, 54)
+layout_mode = 2
+size_flags_horizontal = 4
+texture = ExtResource("2_cr")
+expand_mode = 1
+stretch_mode = 5
 
 [node name="TitleLabel" type="Label" parent="CenterPanel/VBox"]
 layout_mode = 2
@@ -48,9 +57,9 @@ horizontal_alignment = 1
 
 [node name="RulesLabel" type="Label" parent="CenterPanel/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 19
 text = "Защитите Королеву и успейте победить до научного прорыва врага.
-Стройте соты, здания и Апартаменты; переобучайте пчёл по клику на счётчик.
+Рисуйте восковые соты, стройте здания и управляйте слотами роя [- / +].
 Лаборатория откроет технологии и 3 концовки. Камера: края экрана и колесо."
 horizontal_alignment = 1
 autowrap_mode = 2

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="AbilityData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/ability_data.gd" id="1_s"]
+[ext_resource type="Texture2D" path="res://assets/icons/ability_swarm_fury.svg" id="2_i"]
+[ext_resource type="Script" path="res://scripts/abilities/swarm_fury_ability.gd" id="3_ab"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"swarm_fury"
+display_name = "Ярость роя"
+description = "Удваивает скорострельность всех башен на 15 секунд."
+icon = ExtResource("2_i")
+required_research = &"elite_regiment"
+cooldown = 90.0
+duration = 15.0
+effect_value = 1.0
+max_targets = 0
+is_toggle = false
+sort_order = 30
+ability_script = ExtResource("3_ab")

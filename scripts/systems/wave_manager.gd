@@ -9,6 +9,20 @@ signal intel_message(text: String)
 signal enemy_breakthrough_announced
 signal breakthrough_wave_started
 
+
+class SpawnEntry extends RefCounted:
+	var data: EnemyData
+	var pattern: GameEnums.WavePattern = GameEnums.WavePattern.SCATTERED
+	var base_angle: float = 0.0
+	var is_breakthrough: bool = false
+
+	func _init(p_data: EnemyData, p_pattern: GameEnums.WavePattern, p_angle: float, p_bt: bool = false) -> void:
+		data = p_data
+		pattern = p_pattern
+		base_angle = p_angle
+		is_breakthrough = p_bt
+
+
 const SPAWN_RADIUS: float = 650.0
 
 @export var enemy_scene: PackedScene
@@ -21,7 +35,7 @@ var _waves: Array[WaveData] = []
 var _enemy_db: Dictionary[StringName, EnemyData] = {}
 var _wave_index: int = 0
 var _timer: float = 55.0
-var _spawn_queue: Array[Dictionary] = []
+var _spawn_queue: Array[SpawnEntry] = []
 var _spawn_timer: float = 0.0
 var _current_interval: float = 0.6
 var _breakthrough_announced: bool = false
@@ -33,6 +47,10 @@ func setup(context: GameContext, waves: Array[WaveData], enemy_db: Dictionary[St
 	_context = context
 	_waves = waves
 	_enemy_db = enemy_db
+	if _context != null and _context.balance != null:
+		first_wave_delay = _context.balance.first_wave_delay
+		wave_interval = _context.balance.wave_interval
+		breakthrough_delay = _context.balance.breakthrough_delay
 	_timer = first_wave_delay
 
 
@@ -55,7 +73,8 @@ func get_total_waves() -> int:
 
 
 func get_enemy_potential() -> float:
-	return 1.0 + 0.06 * float(maxi(0, _wave_index - 1))
+	var growth: float = _context.balance.wave_hp_growth if (_context != null and _context.balance != null) else 0.06
+	return 1.0 + growth * float(maxi(0, _wave_index - 1))
 
 
 func can_call_early() -> bool:
@@ -79,10 +98,12 @@ func get_breakthrough_countdown() -> float:
 func call_next_wave_early() -> bool:
 	if not can_call_early():
 		return false
-	_context.bank.add(GameEnums.ResourceType.WAX, 15.0)
-	_context.bank.add(GameEnums.ResourceType.HONEY, 10.0)
+	var wax_bonus: float = _context.balance.early_wave_wax_bonus if _context.balance != null else 15.0
+	var honey_bonus: float = _context.balance.early_wave_honey_bonus if _context.balance != null else 10.0
+	_context.bank.add(GameEnums.ResourceType.WAX, wax_bonus)
+	_context.bank.add(GameEnums.ResourceType.HONEY, honey_bonus)
 	if _context.effects != null:
-		_context.effects.spawn_floating_text(_get_queen_pos() + Vector2(0.0, -32.0), "+15 воска +10 мёда", Color(1.0, 0.9, 0.35))
+		_context.effects.spawn_floating_text(_get_queen_pos() + Vector2(0.0, -32.0), "+%d воска +%d мёда" % [int(wax_bonus), int(honey_bonus)], Color(1.0, 0.9, 0.35))
 	start_next_wave_now()
 	return true
 
@@ -150,7 +171,7 @@ func _process(delta: float) -> void:
 		_spawn_timer -= delta
 		if _spawn_timer <= 0.0:
 			_spawn_timer = _current_interval
-			var entry: Dictionary = _spawn_queue.pop_front()
+			var entry: SpawnEntry = _spawn_queue.pop_front()
 			_spawn_entry(entry)
 	elif _wave_index >= _waves.size():
 		if not _breakthrough_announced:
@@ -186,10 +207,10 @@ func _launch_breakthrough_wave() -> void:
 			spawn_enemy(queen_data, pos, GameEnums.Faction.HOSTILE, true)
 	if hornet_data != null:
 		for i: int in range(30):
-			_spawn_queue.append({"data": hornet_data, "pattern": GameEnums.WavePattern.SCATTERED, "base_angle": 0.0, "breakthrough": true})
+			_spawn_queue.append(SpawnEntry.new(hornet_data, GameEnums.WavePattern.SCATTERED, 0.0, true))
 	if dragonfly_data != null:
 		for i: int in range(20):
-			_spawn_queue.append({"data": dragonfly_data, "pattern": GameEnums.WavePattern.SCATTERED, "base_angle": 0.0, "breakthrough": true})
+			_spawn_queue.append(SpawnEntry.new(dragonfly_data, GameEnums.WavePattern.SCATTERED, 0.0, true))
 	_spawn_timer = 0.0
 	breakthrough_wave_started.emit()
 	if _context.camera != null:
@@ -208,7 +229,7 @@ func _launch_next_wave() -> void:
 		_context.effects.set_incoming_arrow(base_angle, 8.0)
 	var size_mult: float = _context.modifiers.multiplier(StatModifiers.WAVE_SIZE)
 	var pair_count: int = mini(wave.enemy_ids.size(), wave.enemy_counts.size())
-	var entries: Array[Dictionary] = []
+	var entries: Array[SpawnEntry] = []
 	for i: int in range(pair_count):
 		var eid: StringName = StringName(wave.enemy_ids[i])
 		var edata: EnemyData = _enemy_db.get(eid)
@@ -216,12 +237,7 @@ func _launch_next_wave() -> void:
 			continue
 		var scaled_count: int = maxi(1, int(roundf(float(wave.enemy_counts[i]) * size_mult)))
 		for c: int in range(scaled_count):
-			entries.append({
-				"data": edata,
-				"pattern": wave.pattern,
-				"base_angle": base_angle,
-				"breakthrough": false,
-			})
+			entries.append(SpawnEntry.new(edata, wave.pattern, base_angle, false))
 	entries.shuffle()
 	_spawn_queue.append_array(entries)
 	_spawn_timer = 0.0
@@ -246,16 +262,14 @@ func _spawn_allied_hornets() -> void:
 		spawn_enemy(hornet_data, center + Vector2(cos(a), sin(a)) * randf_range(36.0, 72.0), GameEnums.Faction.ALLY)
 
 
-func _spawn_entry(entry: Dictionary) -> void:
-	var edata: EnemyData = entry["data"] as EnemyData
-	if edata == null:
+func _spawn_entry(entry: SpawnEntry) -> void:
+	if entry == null or entry.data == null:
 		return
-	var pos: Vector2 = _pick_spawn_position(edata, int(entry["pattern"]), float(entry["base_angle"]))
-	var is_bt: bool = bool(entry.get("breakthrough", false))
-	spawn_enemy(edata, pos, GameEnums.Faction.HOSTILE, is_bt)
+	var pos: Vector2 = _pick_spawn_position(entry.data, entry.pattern, entry.base_angle)
+	spawn_enemy(entry.data, pos, GameEnums.Faction.HOSTILE, entry.is_breakthrough)
 
 
-func _pick_spawn_position(edata: EnemyData, pattern: int, base_angle: float) -> Vector2:
+func _pick_spawn_position(edata: EnemyData, pattern: GameEnums.WavePattern, base_angle: float) -> Vector2:
 	var center: Vector2 = _get_arena_center()
 	if edata.target_mode == GameEnums.EnemyTargetMode.STORAGE:
 		var storages: Array[Building] = []
@@ -268,8 +282,9 @@ func _pick_spawn_position(edata: EnemyData, pattern: int, base_angle: float) -> 
 			anchor = chosen.global_position
 		var offset_a: float = randf() * TAU
 		return anchor + Vector2(cos(offset_a), sin(offset_a)) * randf_range(24.0, 60.0)
-	var angle: float = randf() * TAU if pattern == GameEnums.WavePattern.SCATTERED else base_angle + deg_to_rad(randf_range(-15.0, 15.0))
-	return center + Vector2(cos(angle), sin(angle)) * SPAWN_RADIUS
+	var angle: float = randf() * TAU if pattern == GameEnums.WavePattern.SCATTERED else base_angle + deg_to_rad(randf_range(-22.0, 22.0))
+	var dist: float = SPAWN_RADIUS + randf_range(-18.0, 42.0)
+	return center + Vector2(cos(angle), sin(angle)) * dist
 
 
 func _has_hostile_enemies() -> bool:

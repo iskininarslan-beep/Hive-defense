@@ -1,6 +1,69 @@
 class_name EffectsLayer
 extends Node2D
 
+
+class EffectParticle extends RefCounted:
+	var pos: Vector2
+	var vel: Vector2
+	var color: Color
+	var size: float
+	var life: float
+	var max_life: float
+
+	func _init(p_pos: Vector2, p_vel: Vector2, p_color: Color, p_size: float, p_life: float) -> void:
+		pos = p_pos
+		vel = p_vel
+		color = p_color
+		size = p_size
+		life = p_life
+		max_life = maxf(0.05, p_life)
+
+
+class EffectRing extends RefCounted:
+	var pos: Vector2
+	var max_radius: float
+	var color: Color
+	var life: float
+	var max_life: float
+	var filled_alpha: float
+
+	func _init(p_pos: Vector2, p_max_radius: float, p_color: Color, p_duration: float, p_filled: float) -> void:
+		pos = p_pos
+		max_radius = p_max_radius
+		color = p_color
+		life = p_duration
+		max_life = maxf(0.05, p_duration)
+		filled_alpha = p_filled
+
+
+class EffectLightning extends RefCounted:
+	var points: PackedVector2Array
+	var color: Color
+	var life: float
+	var max_life: float
+
+	func _init(p_pts: PackedVector2Array, p_color: Color, p_duration: float) -> void:
+		points = p_pts
+		color = p_color
+		life = p_duration
+		max_life = maxf(0.05, p_duration)
+
+
+class EffectText extends RefCounted:
+	var pos: Vector2
+	var text: String
+	var color: Color
+	var life: float
+	var max_life: float
+
+	func _init(p_pos: Vector2, p_text: String, p_color: Color, p_duration: float = 1.1) -> void:
+		pos = p_pos
+		text = p_text
+		color = p_color
+		life = p_duration
+		max_life = maxf(0.05, p_duration)
+
+
 const MAX_PARTICLES: int = 240
 const MAX_RINGS: int = 32
 const MAX_LIGHTNING: int = 24
@@ -9,10 +72,10 @@ const MAX_TEXTS: int = 32
 var arena_center: Vector2 = Vector2(640.0, 335.0)
 var arena_rim_radius: float = 255.0
 
-var _particles: Array[Dictionary] = []
-var _rings: Array[Dictionary] = []
-var _lightnings: Array[Dictionary] = []
-var _texts: Array[Dictionary] = []
+var _particles: Array[EffectParticle] = []
+var _rings: Array[EffectRing] = []
+var _lightnings: Array[EffectLightning] = []
+var _texts: Array[EffectText] = []
 var _arrow_angle: float = 0.0
 var _arrow_timer: float = 0.0
 var _breakthrough_active: bool = false
@@ -25,28 +88,14 @@ func spawn_burst(pos: Vector2, color: Color, count: int = 8, speed: float = 90.0
 			_particles.pop_front()
 		var a: float = randf() * TAU
 		var s: float = randf_range(speed * 0.4, speed * 1.1)
-		_particles.append({
-			"pos": pos,
-			"vel": Vector2(cos(a), sin(a)) * s,
-			"color": color,
-			"size": randf_range(2.0, 4.2),
-			"life": randf_range(0.25, 0.5),
-			"max_life": 0.5,
-		})
+		_particles.append(EffectParticle.new(pos, Vector2(cos(a), sin(a)) * s, color, randf_range(2.0, 4.2), randf_range(0.25, 0.5)))
 	queue_redraw()
 
 
 func spawn_ring(pos: Vector2, max_radius: float, color: Color, duration: float = 0.45, filled_alpha: float = 0.0) -> void:
 	if _rings.size() >= MAX_RINGS:
 		_rings.pop_front()
-	_rings.append({
-		"pos": pos,
-		"max_radius": max_radius,
-		"color": color,
-		"life": duration,
-		"max_life": maxf(0.05, duration),
-		"filled_alpha": filled_alpha,
-	})
+	_rings.append(EffectRing.new(pos, max_radius, color, duration, filled_alpha))
 	queue_redraw()
 
 
@@ -55,25 +104,14 @@ func spawn_lightning(points: PackedVector2Array, color: Color, duration: float =
 		return
 	if _lightnings.size() >= MAX_LIGHTNING:
 		_lightnings.pop_front()
-	_lightnings.append({
-		"points": points,
-		"color": color,
-		"life": duration,
-		"max_life": maxf(0.05, duration),
-	})
+	_lightnings.append(EffectLightning.new(points, color, duration))
 	queue_redraw()
 
 
 func spawn_floating_text(pos: Vector2, text: String, color: Color) -> void:
 	if _texts.size() >= MAX_TEXTS:
 		_texts.pop_front()
-	_texts.append({
-		"pos": pos,
-		"text": text,
-		"color": color,
-		"life": 1.1,
-		"max_life": 1.1,
-	})
+	_texts.append(EffectText.new(pos, text, color, 1.1))
 	queue_redraw()
 
 
@@ -99,36 +137,36 @@ func _process(delta: float) -> void:
 		dirty = true
 
 	for i: int in range(_particles.size() - 1, -1, -1):
-		var p: Dictionary = _particles[i]
-		p["life"] = float(p["life"]) - delta
-		if float(p["life"]) <= 0.0:
+		var p: EffectParticle = _particles[i]
+		p.life -= delta
+		if p.life <= 0.0:
 			_particles.remove_at(i)
 		else:
-			p["pos"] = (p["pos"] as Vector2) + (p["vel"] as Vector2) * delta
-			p["vel"] = (p["vel"] as Vector2) * maxf(0.0, 1.0 - 4.0 * delta)
+			p.pos += p.vel * delta
+			p.vel *= maxf(0.0, 1.0 - 4.0 * delta)
 		dirty = true
 
 	for i: int in range(_rings.size() - 1, -1, -1):
-		var r: Dictionary = _rings[i]
-		r["life"] = float(r["life"]) - delta
-		if float(r["life"]) <= 0.0:
+		var r: EffectRing = _rings[i]
+		r.life -= delta
+		if r.life <= 0.0:
 			_rings.remove_at(i)
 		dirty = true
 
 	for i: int in range(_lightnings.size() - 1, -1, -1):
-		var l: Dictionary = _lightnings[i]
-		l["life"] = float(l["life"]) - delta
-		if float(l["life"]) <= 0.0:
+		var l: EffectLightning = _lightnings[i]
+		l.life -= delta
+		if l.life <= 0.0:
 			_lightnings.remove_at(i)
 		dirty = true
 
 	for i: int in range(_texts.size() - 1, -1, -1):
-		var t: Dictionary = _texts[i]
-		t["life"] = float(t["life"]) - delta
-		if float(t["life"]) <= 0.0:
+		var t: EffectText = _texts[i]
+		t.life -= delta
+		if t.life <= 0.0:
 			_texts.remove_at(i)
 		else:
-			t["pos"] = (t["pos"] as Vector2) + Vector2(0.0, -24.0) * delta
+			t.pos += Vector2(0.0, -24.0) * delta
 		dirty = true
 
 	if dirty:
@@ -153,34 +191,25 @@ func _draw() -> void:
 		])
 		draw_colored_polygon(tri, Color(1.0, 0.28, 0.22, pulse_a))
 
-	for r: Dictionary in _rings:
-		var t: float = 1.0 - float(r["life"]) / float(r["max_life"])
-		var alpha: float = clampf(float(r["life"]) / float(r["max_life"]), 0.0, 1.0)
-		var col: Color = r["color"] as Color
-		var pos: Vector2 = r["pos"] as Vector2
-		var radius: float = float(r["max_radius"]) * (0.35 + 0.65 * minf(1.0, t * 2.5))
-		var filled_a: float = float(r["filled_alpha"])
-		if filled_a > 0.0:
-			draw_circle(pos, radius, Color(col.r, col.g, col.b, filled_a * alpha))
-		draw_arc(pos, radius, 0.0, TAU, 32, Color(col.r, col.g, col.b, col.a * alpha), 2.5)
+	for r: EffectRing in _rings:
+		var t: float = 1.0 - r.life / r.max_life
+		var alpha: float = clampf(r.life / r.max_life, 0.0, 1.0)
+		var radius: float = r.max_radius * (0.35 + 0.65 * minf(1.0, t * 2.5))
+		if r.filled_alpha > 0.0:
+			draw_circle(r.pos, radius, Color(r.color.r, r.color.g, r.color.b, r.filled_alpha * alpha))
+		draw_arc(r.pos, radius, 0.0, TAU, 32, Color(r.color.r, r.color.g, r.color.b, r.color.a * alpha), 2.5)
 
-	for l: Dictionary in _lightnings:
-		var alpha: float = clampf(float(l["life"]) / float(l["max_life"]), 0.0, 1.0)
-		var pts: PackedVector2Array = l["points"] as PackedVector2Array
-		var col: Color = l["color"] as Color
-		draw_polyline(pts, Color(col.r, col.g, col.b, 0.75 * alpha), 5.0)
-		draw_polyline(pts, Color(1.0, 1.0, 1.0, alpha), 2.0)
+	for l: EffectLightning in _lightnings:
+		var alpha: float = clampf(l.life / l.max_life, 0.0, 1.0)
+		draw_polyline(l.points, Color(l.color.r, l.color.g, l.color.b, 0.75 * alpha), 5.0)
+		draw_polyline(l.points, Color(1.0, 1.0, 1.0, alpha), 2.0)
 
-	for p: Dictionary in _particles:
-		var alpha: float = clampf(float(p["life"]) / float(p["max_life"]), 0.0, 1.0)
-		var col: Color = p["color"] as Color
-		draw_circle(p["pos"] as Vector2, float(p["size"]), Color(col.r, col.g, col.b, alpha))
+	for p: EffectParticle in _particles:
+		var alpha: float = clampf(p.life / p.max_life, 0.0, 1.0)
+		draw_circle(p.pos, p.size, Color(p.color.r, p.color.g, p.color.b, alpha))
 
 	var font: Font = ThemeDB.fallback_font
-	for t: Dictionary in _texts:
-		var alpha: float = clampf(float(t["life"]) / float(t["max_life"]), 0.0, 1.0)
-		var col: Color = t["color"] as Color
-		var pos: Vector2 = t["pos"] as Vector2
-		var msg: String = String(t["text"])
-		draw_string(font, pos + Vector2(-49.0, 1.0), msg, HORIZONTAL_ALIGNMENT_CENTER, 100.0, 14, Color(0.0, 0.0, 0.0, 0.8 * alpha))
-		draw_string(font, pos + Vector2(-50.0, 0.0), msg, HORIZONTAL_ALIGNMENT_CENTER, 100.0, 14, Color(col.r, col.g, col.b, alpha))
+	for t: EffectText in _texts:
+		var alpha: float = clampf(t.life / t.max_life, 0.0, 1.0)
+		draw_string(font, t.pos + Vector2(-49.0, 1.0), t.text, HORIZONTAL_ALIGNMENT_CENTER, 100.0, 14, Color(0.0, 0.0, 0.0, 0.8 * alpha))
+		draw_string(font, t.pos + Vector2(-50.0, 0.0), t.text, HORIZONTAL_ALIGNMENT_CENTER, 100.0, 14, Color(t.color.r, t.color.g, t.color.b, alpha))

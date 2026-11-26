@@ -18,3 +18,4 @@ max_hp = 100.0
 color = Color(0.95, 0.82, 0.68, 1)
 hatch_time = 8.0
 honey_cost = 10.0
+sort_order = 10

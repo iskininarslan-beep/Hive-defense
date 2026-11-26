@@ -20,3 +20,7 @@ func on_removed() -> void:
 
 func get_status_text() -> String:
 	return "Работает"
+
+
+func is_work_stalled() -> bool:
+	return false

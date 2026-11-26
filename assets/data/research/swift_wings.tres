@@ -19,3 +19,4 @@ time = 22.0
 modifier_keys = PackedStringArray("bee_speed")
 modifier_values = PackedFloat32Array(0.45)
 ending = 0
+sort_order = 20

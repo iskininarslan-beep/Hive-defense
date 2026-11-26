@@ -8,16 +8,18 @@ func _init() -> void:
 	icon = preload("res://assets/icons/ability_agitation.svg")
 	required_research = &"agitation"
 	cooldown = 90.0
+	max_targets = 5
 
 
 func _on_activate() -> bool:
 	if _context == null:
 		return false
+	var limit: int = max_targets if max_targets > 0 else 5
 	var converted: int = 0
 	for enemy: Enemy in _context.get_hostile_enemies():
 		if enemy.data.id == &"hornet":
 			enemy.convert_to_ally()
 			converted += 1
-			if converted >= 5:
+			if converted >= limit:
 				break
 	return converted > 0

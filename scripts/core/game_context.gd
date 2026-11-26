@@ -1,6 +1,8 @@
 class_name GameContext
 extends RefCounted
 
+var balance: GameBalanceConfig
+var validation_warnings: Array[String] = []
 var bank: ResourceBank
 var colony: Colony
 var research: ResearchManager

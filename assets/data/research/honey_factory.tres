@@ -17,3 +17,4 @@ cost_nectar = 20.0
 cost_wax = 20.0
 time = 14.0
 ending = 0
+sort_order = 10

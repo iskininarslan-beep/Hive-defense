@@ -14,3 +14,4 @@ footprint_radius = 1
 build_time = 0.0
 max_hp = 600.0
 color = Color(0.6, 0.4, 0.8, 1)
+sort_order = 10

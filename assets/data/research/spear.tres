@@ -19,3 +19,4 @@ time = 18.0
 modifier_keys = PackedStringArray("tower_damage")
 modifier_values = PackedFloat32Array(0.3)
 ending = 0
+sort_order = 10

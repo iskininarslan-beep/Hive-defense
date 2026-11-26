@@ -19,3 +19,4 @@ time = 35.0
 modifier_keys = PackedStringArray("allied_hornets_per_wave")
 modifier_values = PackedFloat32Array(3.0)
 ending = 0
+sort_order = 20

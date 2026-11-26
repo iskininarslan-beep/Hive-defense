@@ -30,3 +30,4 @@ slow_duration = 0.0
 chain_count = 3
 chain_range = 105.0
 projectile_color = Color(0.45, 0.85, 1, 1)
+sort_order = 40

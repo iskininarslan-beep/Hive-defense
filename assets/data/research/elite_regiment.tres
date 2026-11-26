@@ -19,3 +19,4 @@ time = 35.0
 modifier_keys = PackedStringArray("tower_fire_rate")
 modifier_values = PackedFloat32Array(0.3)
 ending = 0
+sort_order = 10

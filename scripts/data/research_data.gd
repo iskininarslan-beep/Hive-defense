@@ -9,6 +9,7 @@ extends Resource
 @export var prerequisites: PackedStringArray = PackedStringArray()
 @export var any_prerequisite: bool = false
 @export var icon: Texture2D
+@export var sort_order: int = 100
 
 @export_group("Cost")
 @export var cost_pollen: float = 0.0

@@ -17,3 +17,4 @@ cost_pollen = 50.0
 cost_wax = 75.0
 time = 25.0
 ending = 0
+sort_order = 20

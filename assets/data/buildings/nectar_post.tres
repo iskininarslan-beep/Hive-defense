@@ -20,3 +20,4 @@ worker_slots = 2
 resource_type = 1
 amount_per_trip = 6.0
 collect_time = 1.5
+sort_order = 20

@@ -26,7 +26,8 @@ func _on_bee_trip_completed(bee: Bee) -> void:
 	var gd: GatherData = building.data as GatherData
 	if gd == null:
 		return
-	var lvl_mult: float = 1.45 if building.level >= 2 else 1.0
+	var out_mult: float = _context.balance.upgrade_economy_output_mult if (_context != null and _context.balance != null) else 1.45
+	var lvl_mult: float = out_mult if building.level >= 2 else 1.0
 	var amount: float = gd.amount_per_trip * _context.modifiers.multiplier(StatModifiers.GATHER_AMOUNT) * lvl_mult
 	var added: float = _context.bank.add(gd.resource_type, amount)
 	if added > 0.5 and _context.effects != null:
@@ -34,8 +35,19 @@ func _on_bee_trip_completed(bee: Bee) -> void:
 		_context.effects.spawn_floating_text(building.global_position + Vector2(0.0, -14.0), "+%d" % int(roundf(added)), col)
 
 
+func is_work_stalled() -> bool:
+	if building == null or not building.is_built or _context == null:
+		return false
+	var gd: GatherData = building.data as GatherData
+	if gd == null:
+		return false
+	return not _context.bank.has_space(gd.resource_type, 0.1)
+
+
 func get_status_text() -> String:
 	var gd: GatherData = building.data as GatherData
+	if building.desired_operators <= 0:
+		return "Приостановлено"
 	if building.operators.is_empty():
 		return "Нет рабочих"
 	if not _context.bank.has_space(gd.resource_type, 0.1):

@@ -9,6 +9,7 @@ var _skip_intro: bool = false
 var _demo_lab: bool = false
 var _demo_retrain: bool = false
 var _demo_breakthrough: bool = false
+var _test_invalid_data: bool = false
 var _has_zoom_override: bool = false
 var _zoom_override: float = 2.0
 var _screenshot_path: String = ""
@@ -36,6 +37,9 @@ func setup(p_context: GameContext, p_research: ResearchManager, p_waves: WaveMan
 		elif arg == "--demo-breakthrough":
 			_demo_breakthrough = true
 			_skip_intro = true
+		elif arg == "--test-invalid-data":
+			_test_invalid_data = true
+			_skip_intro = true
 		elif arg.begins_with("--camera-zoom="):
 			_has_zoom_override = true
 			_zoom_override = float(arg.substr("--camera-zoom=".length()))
@@ -61,6 +65,61 @@ func should_demo_retrain() -> bool:
 
 func should_demo_breakthrough() -> bool:
 	return OS.is_debug_build() and _demo_breakthrough
+
+
+func should_test_invalid_data() -> bool:
+	if OS.is_debug_build() and _test_invalid_data:
+		return true
+	for arg: String in OS.get_cmdline_user_args():
+		if arg == "--test-invalid-data":
+			return true
+	return false
+
+
+func inject_invalid_test_cases(
+	balance: GameBalanceConfig,
+	buildings: Array[BuildingData],
+	enemies: Dictionary[StringName, EnemyData],
+	waves: Array[WaveData]
+) -> void:
+	var corrupt_tower: TowerData = TowerData.new()
+	corrupt_tower.id = &"test_corrupt_tower"
+	corrupt_tower.display_name = ""
+	corrupt_tower.category = GameEnums.BuildCategory.DEFENSE
+	corrupt_tower.sort_order = 99
+	corrupt_tower.cost_wax = -80.0
+	corrupt_tower.cost_honey = -15.0
+	corrupt_tower.max_hp = -25.0
+	corrupt_tower.build_time = -4.0
+	corrupt_tower.fire_interval = 0.0
+	corrupt_tower.worker_slots = -2
+	corrupt_tower.worker_role = GameEnums.BeeRole.SOLDIER
+	corrupt_tower.required_research = &"missing_tech_id"
+	corrupt_tower.icon = null
+	buildings.append(corrupt_tower)
+
+	var corrupt_enemy: EnemyData = EnemyData.new()
+	corrupt_enemy.id = &"test_corrupt_bug"
+	corrupt_enemy.display_name = "Тест-ошибка"
+	corrupt_enemy.max_hp = -10.0
+	corrupt_enemy.speed = -5.0
+	corrupt_enemy.attack_interval = 0.0
+	corrupt_enemy.visual_script = null
+	enemies[corrupt_enemy.id] = corrupt_enemy
+
+	if not waves.is_empty():
+		var w0: WaveData = waves[0]
+		var ids: PackedStringArray = w0.enemy_ids.duplicate()
+		var cnts: PackedInt32Array = w0.enemy_counts.duplicate()
+		ids.append("ghost_ant_nonexistent")
+		cnts.append(3)
+		ids.append("test_corrupt_bug")
+		cnts.append(-4)
+		w0.enemy_ids = ids
+		w0.enemy_counts = cnts
+
+	if balance != null:
+		balance.comb_wax_cost = maxf(0.0, balance.comb_wax_cost)
 
 
 func _unhandled_input(event: InputEvent) -> void:

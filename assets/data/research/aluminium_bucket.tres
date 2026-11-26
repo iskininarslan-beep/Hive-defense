@@ -19,3 +19,4 @@ time = 22.0
 modifier_keys = PackedStringArray("gather_amount")
 modifier_values = PackedFloat32Array(0.5)
 ending = 0
+sort_order = 10

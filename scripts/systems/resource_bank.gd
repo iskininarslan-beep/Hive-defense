@@ -3,24 +3,25 @@ extends Node
 
 signal resources_changed(type: GameEnums.ResourceType, amount: float, capacity: float)
 
-const BASE_CAPACITY: float = 150.0
+const DEFAULT_BASE_CAPACITY: float = 150.0
 
 var _amounts: Dictionary[GameEnums.ResourceType, float] = {}
 var _capacities: Dictionary[GameEnums.ResourceType, float] = {}
 
 
-func setup(initial: Dictionary[GameEnums.ResourceType, float]) -> void:
+func setup(initial: Dictionary[GameEnums.ResourceType, float], base_capacity: float = DEFAULT_BASE_CAPACITY) -> void:
 	_amounts.clear()
 	_capacities.clear()
+	var cap: float = maxf(1.0, base_capacity)
 	for type: GameEnums.ResourceType in [
 		GameEnums.ResourceType.POLLEN,
 		GameEnums.ResourceType.NECTAR,
 		GameEnums.ResourceType.WAX,
 		GameEnums.ResourceType.HONEY,
 	]:
-		_capacities[type] = BASE_CAPACITY
-		_amounts[type] = clampf(initial.get(type, 0.0), 0.0, BASE_CAPACITY)
-		resources_changed.emit(type, _amounts[type], BASE_CAPACITY)
+		_capacities[type] = cap
+		_amounts[type] = clampf(initial.get(type, 0.0), 0.0, cap)
+		resources_changed.emit(type, _amounts[type], cap)
 
 
 func get_amount(type: GameEnums.ResourceType) -> float:

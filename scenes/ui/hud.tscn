@@ -381,11 +381,27 @@ layout_mode = 2
 expand_mode = 1
 stretch_mode = 5
 
+[node name="BPWorkersDecBtn" type="Button" parent="BuildingPanel/VBox/BPWorkersRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+tooltip_text = "Убрать слот рабочего"
+text = "-"
+
 [node name="BPWorkersLabel" type="Label" parent="BuildingPanel/VBox/BPWorkersRow"]
 unique_name_in_owner = true
+custom_minimum_size = Vector2(46, 0)
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "1/2"
+horizontal_alignment = 1
+
+[node name="BPWorkersIncBtn" type="Button" parent="BuildingPanel/VBox/BPWorkersRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+tooltip_text = "Добавить слот рабочего"
+text = "+"
 
 [node name="BPKindergartenBox" type="HBoxContainer" parent="BuildingPanel/VBox"]
 unique_name_in_owner = true

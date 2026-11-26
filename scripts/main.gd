@@ -23,6 +23,7 @@ extends Node2D
 @onready var intro_screen: IntroScreen = $UI/IntroScreen
 @onready var debug_tools: DebugTools = $DebugTools
 
+var _demo_director: DemoDirector
 var _context: GameContext
 var _elapsed_time: float = 0.0
 var _is_paused: bool = false
@@ -33,7 +34,23 @@ var _last_queen_hp: float = 600.0
 
 func _ready() -> void:
 	Engine.time_scale = 1.0
+	var extra_dirs: PackedStringArray = GameDatabase.get_runtime_extra_dirs()
+	var balance_cfg: GameBalanceConfig = GameDatabase.load_balance_config()
+	var all_buildings: Array[BuildingData] = GameDatabase.load_buildings(extra_dirs)
+	var all_enemies: Dictionary[StringName, EnemyData] = GameDatabase.load_enemies(extra_dirs)
+	var all_research: Array[ResearchData] = GameDatabase.load_research(extra_dirs)
+	var all_waves: Array[WaveData] = GameDatabase.load_waves(extra_dirs)
+	var all_abilities: Array[AbilityData] = GameDatabase.load_abilities(extra_dirs)
+
+	if debug_tools.should_test_invalid_data():
+		debug_tools.inject_invalid_test_cases(balance_cfg, all_buildings, all_enemies, all_waves)
+
+	var validator: DataValidator = DataValidator.new()
+	validator.validate_all(balance_cfg, all_buildings, all_enemies, all_research, all_waves, all_abilities)
+
 	_context = GameContext.new()
+	_context.balance = balance_cfg
+	_context.validation_warnings = validator.warnings
 	_context.bank = bank
 	_context.colony = colony
 	_context.research = research_manager
@@ -47,26 +64,16 @@ func _ready() -> void:
 	_context.effects = effects_layer
 	_context.camera = camera
 
-	var all_buildings: Array[BuildingData] = GameDatabase.load_buildings()
 	var buildings_by_id: Dictionary[StringName, BuildingData] = {}
 	for b: BuildingData in all_buildings:
 		buildings_by_id[b.id] = b
-	var all_enemies: Dictionary[StringName, EnemyData] = GameDatabase.load_enemies()
-	var all_research: Array[ResearchData] = GameDatabase.load_research()
-	var all_waves: Array[WaveData] = GameDatabase.load_waves()
 
-	var initial_resources: Dictionary[GameEnums.ResourceType, float] = {
-		GameEnums.ResourceType.POLLEN: 50.0,
-		GameEnums.ResourceType.NECTAR: 50.0,
-		GameEnums.ResourceType.WAX: 120.0,
-		GameEnums.ResourceType.HONEY: 50.0,
-	}
-	bank.setup(initial_resources)
+	bank.setup(balance_cfg.get_initial_resources(), balance_cfg.base_storage_capacity)
 	arena.setup(_context)
 	colony.setup(_context)
 	research_manager.setup(_context, all_research)
 	wave_manager.setup(_context, all_waves, all_enemies)
-	ability_manager.setup(_context)
+	ability_manager.setup(_context, all_abilities)
 	ending_controller.setup(_context, research_manager, wave_manager, arena)
 	build_controller.setup(_context)
 	hud.setup(_context, all_buildings, research_manager, wave_manager, ability_manager, build_controller)
@@ -97,7 +104,27 @@ func _ready() -> void:
 
 	hud.refresh_all()
 
-	if debug_tools.should_skip_intro():
+	_demo_director = DemoDirector.new()
+	add_child(_demo_director)
+	_demo_director.configure(
+		self,
+		_context,
+		buildings_by_id,
+		all_enemies,
+		research_manager,
+		wave_manager,
+		ability_manager,
+		build_controller,
+		hud,
+		research_panel,
+		intro_screen,
+		camera
+	)
+
+	if debug_tools.should_test_invalid_data():
+		hud.show_message("DataValidator: исправлено %d ошибок данных — игра работает стабильно" % validator.warnings.size())
+
+	if debug_tools.should_skip_intro() or _demo_director.should_skip_intro():
 		intro_screen.visible = false
 		get_tree().paused = false
 	else:
@@ -119,6 +146,7 @@ func _connect_signals() -> void:
 	hud.retrain_requested.connect(_on_retrain_requested)
 	hud.upgrade_requested.connect(_on_upgrade_requested)
 	hud.call_wave_requested.connect(wave_manager.call_next_wave_early)
+	hud.workers_adjust_requested.connect(_on_workers_adjust_requested)
 
 	build_controller.building_selected.connect(_on_building_selected)
 	build_controller.pause_toggle_requested.connect(_toggle_pause)
@@ -180,6 +208,14 @@ func _on_building_selected(b: Building) -> void:
 func _on_retrain_requested(from_role: GameEnums.BeeRole, to_role: GameEnums.BeeRole) -> void:
 	if not colony.retrain_bee(from_role, to_role):
 		hud.show_message("Нет свободной пчелы этой роли")
+
+
+func _on_workers_adjust_requested(b: Building, delta: int) -> void:
+	if not is_instance_valid(b):
+		return
+	b.set_desired_operators(b.desired_operators + delta)
+	colony.trigger_assign_now()
+	hud.refresh_building_panel()
 
 
 func _on_upgrade_requested(b: Building) -> void:

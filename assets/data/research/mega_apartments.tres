@@ -19,3 +19,4 @@ time = 30.0
 modifier_keys = PackedStringArray("apartments_cap_bonus", "training_speed")
 modifier_values = PackedFloat32Array(4.0, 0.5)
 ending = 0
+sort_order = 20

@@ -19,3 +19,4 @@ time = 25.0
 modifier_keys = PackedStringArray("enemy_power")
 modifier_values = PackedFloat32Array(-0.18)
 ending = 0
+sort_order = 20

@@ -19,3 +19,4 @@ time = 35.0
 modifier_keys = PackedStringArray("building_hp", "queen_regen")
 modifier_values = PackedFloat32Array(0.5, 3.0)
 ending = 0
+sort_order = 20

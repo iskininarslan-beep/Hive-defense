@@ -10,11 +10,29 @@ signal state_changed
 @export var duration: float = 0.0
 @export var required_research: StringName = &""
 @export var is_toggle: bool = false
+@export var effect_value: float = 0.0
+@export var max_targets: int = 0
 
+var data: AbilityData
 var _context: GameContext
 var _cooldown_left: float = 0.0
 var _active_left: float = 0.0
 var _active: bool = false
+
+
+func configure(p_data: AbilityData) -> void:
+	data = p_data
+	if data == null:
+		return
+	display_name = data.display_name
+	description = data.description
+	icon = data.icon
+	cooldown = data.cooldown
+	duration = data.duration
+	required_research = data.required_research
+	is_toggle = data.is_toggle
+	effect_value = data.effect_value
+	max_targets = data.max_targets
 
 
 func setup(context: GameContext) -> void:

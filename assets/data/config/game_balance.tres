@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="GameBalanceConfig" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/game_balance_config.gd" id="1_cfg"]
+
+[resource]
+script = ExtResource("1_cfg")
+start_pollen = 50.0
+start_nectar = 50.0
+start_wax = 120.0
+start_honey = 50.0
+base_storage_capacity = 150.0
+comb_wax_cost = 5.0
+demolish_refund_ratio = 0.5
+base_bee_cap = 14
+initial_gatherers = 6
+initial_builders = 3
+initial_soldiers = 3
+bee_speed = 110.0
+retrain_duration = 2.0
+repair_hp_per_sec = 5.5
+combat_repair_hp_per_sec = 3.0
+apartments_base_cap_bonus = 6
+upgrade_hp_mult = 1.35
+upgrade_tower_damage_mult = 1.35
+upgrade_tower_rate_mult = 1.2
+upgrade_economy_output_mult = 1.45
+upgrade_min_wax_cost = 25.0
+upgrade_honey_surcharge = 20.0
+first_wave_delay = 55.0
+wave_interval = 65.0
+early_wave_wax_bonus = 15.0
+early_wave_honey_bonus = 10.0
+wave_hp_growth = 0.06
+breakthrough_delay = 12.0

@@ -108,21 +108,16 @@ func can_place_building(cell: Vector2i, data: BuildingData) -> String:
 	if data == null:
 		return "Неизвестное здание"
 	var fp: Array[Vector2i] = get_footprint(cell, data)
-	var touches_comb: bool = false
+	var missing_combs: int = 0
 	for fc: Vector2i in fp:
 		if not is_valid_cell(fc):
 			return "Вне зоны улья"
 		if _buildings.has(fc) and is_instance_valid(_buildings[fc]) and not _buildings[fc].is_queued_for_deletion():
 			return "Клетка уже занята"
-		if has_comb(fc):
-			touches_comb = true
-		else:
-			for nb: Vector2i in HexGrid.get_neighbors(fc):
-				if has_comb(nb):
-					touches_comb = true
-					break
-	if not touches_comb:
-		return "Нужно строить рядом с сотами"
+		if not has_comb(fc):
+			missing_combs += 1
+	if missing_combs > 0:
+		return "Сначала нарисуйте соты под все клетки (%d)" % missing_combs
 	if data.required_research != &"" and not _context.research.is_completed(data.required_research):
 		return "Требуется исследование"
 	if data.max_count > 0 and count_all(data.id) >= data.max_count:
@@ -135,8 +130,9 @@ func place_building(cell: Vector2i, data: BuildingData, instant: bool = false) -
 		push_error("Arena: building_scene is not assigned")
 		return null
 	var fp: Array[Vector2i] = get_footprint(cell, data)
-	for fc: Vector2i in get_missing_combs(cell, data):
-		place_comb(fc)
+	if instant:
+		for fc: Vector2i in get_missing_combs(cell, data):
+			place_comb(fc)
 	var b: Building = building_scene.instantiate() as Building
 	_context.buildings_root.add_child(b)
 	b.global_position = cell_to_global(cell)
@@ -205,8 +201,10 @@ func _on_building_destroyed(b: Building) -> void:
 
 
 func _draw() -> void:
-	draw_circle(Vector2.ZERO, 255.0, Color(0.16, 0.12, 0.08, 0.92))
-	draw_arc(Vector2.ZERO, 255.0, 0.0, TAU, 72, Color(0.42, 0.32, 0.16, 0.9), 3.0)
+	draw_circle(Vector2.ZERO, 261.0, Color(0.11, 0.08, 0.04, 0.75))
+	draw_circle(Vector2.ZERO, 255.0, Color(0.17, 0.12, 0.07, 0.94))
+	draw_arc(Vector2.ZERO, 255.0, 0.0, TAU, 72, Color(0.55, 0.40, 0.19, 0.92), 3.2)
+	draw_arc(Vector2.ZERO, 251.0, 0.0, TAU, 72, Color(0.82, 0.62, 0.26, 0.35), 1.4)
 
 	for cell: Vector2i in _valid_cells.keys():
 		var center: Vector2 = HexGrid.axial_to_pixel(cell, hex_size)
@@ -214,7 +212,9 @@ func _draw() -> void:
 		var line_pts: PackedVector2Array = poly.duplicate()
 		line_pts.append(poly[0])
 		if _combs.has(cell):
-			draw_colored_polygon(poly, Color(0.72, 0.52, 0.18, 0.85))
-			draw_polyline(line_pts, Color(0.92, 0.72, 0.28, 0.9), 1.4)
+			draw_colored_polygon(poly, Color(0.72, 0.51, 0.17, 0.9))
+			var inner: PackedVector2Array = HexGrid.hex_corners(center, (hex_size - 1.0) * 0.76)
+			draw_colored_polygon(inner, Color(0.86, 0.65, 0.25, 0.38))
+			draw_polyline(line_pts, Color(0.96, 0.76, 0.30, 0.92), 1.5)
 		else:
-			draw_polyline(line_pts, Color(0.4, 0.34, 0.22, 0.28), 1.0)
+			draw_polyline(line_pts, Color(0.45, 0.37, 0.24, 0.26), 1.0)

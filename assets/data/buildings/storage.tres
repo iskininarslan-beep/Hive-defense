@@ -16,3 +16,4 @@ build_time = 8.0
 max_hp = 140.0
 color = Color(0.93, 0.72, 0.25, 1)
 capacity = 150.0
+sort_order = 50
