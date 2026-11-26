@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="TowerData" format=3]
+
+[ext_resource type="Script" path="res://scripts/data/tower_data.gd" id="1_s"]
+[ext_resource type="Texture2D" path="res://assets/icons/bld_amber_blaster.svg" id="2_i"]
+
+[resource]
+script = ExtResource("1_s")
+id = &"amber_blaster"
+display_name = "Прополисный стреломёт"
+description = "Скорострельная универсальная турель: бьёт по земле и воздуху липкой смолой."
+category = 3
+icon = ExtResource("2_i")
+footprint_radius = 0
+cost_wax = 45.0
+cost_honey = 15.0
+build_time = 9.0
+max_hp = 125.0
+color = Color(0.85, 0.32, 0.27, 1)
+worker_role = 3
+worker_slots = 1
+required_research = &"spear"
+sort_order = 50
+target_layer = 2
+attack_range = 195.0
+damage = 12.0
+fire_interval = 0.6
+projectile_speed = 520.0
+splash_radius = 0.0
+slow_factor = 0.82
+slow_duration = 1.2
+projectile_color = Color(1, 0.72, 0.18, 1)
